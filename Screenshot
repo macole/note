@@ -1,0 +1,13 @@
+1.キャプチャのインストール
+
+sudo apt-get install libping12-dev
+wget https://github.com/AndrewFromMelbourne/raspi2png/archive/master.zip
+unzip master.zip
+cd raspi2png-master
+make
+sudo cp raspi2ping /usr/local/bin
+
+実行
+raspi2png
+raspi2png --pngname filename.png
+raspi2png --delay 5
