@@ -1,0 +1,39 @@
+モジュール
+
+ここからはアプリケーション依存の設定なので必要に応じて。
+pythonを使う場合
+
+RPi
+$ sudo apt-get update
+$ sudo apt-get install python-pip
+$ sudo apt-get install python-dev
+$ sudo pip install netifaces
+GPIO(デジタル入出力)を使う場合
+
+RPi
+$ cd
+$ wget http://www.airspayce.com/mikem/bcm2835/bcm2835-1.38.tar.gz
+$ tar zxvf bcm2835-1.38.tar.gz 
+$ cd bcm2835-1.38/
+$ ./configure 
+$ make
+$ sudo make check
+$ sudo make install
+wiringPi
+RPi
+$ cd
+$ git clone git://git.drogon.net/wiringPi
+$ cd wiringPi/
+$ ./build
+fluentdやAWSを使う場合
+
+RPi
+$ sudo aptitude install ruby-dev
+$ cd
+$ vi .gemrc
+gem: --no-ri --no-rdoc --user-install
+
+$ gem install rake
+$ gem install bundler
+$ gem install fluentd  # 8+ minutes
+$ gem install aws-sdk --version 1.55.0

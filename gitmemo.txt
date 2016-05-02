@@ -1,0 +1,44 @@
+Gitの導入
+
+１．Gitアカウントの作成
+２．Gitツールのインストール
+Windows向けのmsysgitを利用する
+
+git config --global user.name "*****"
+git config --global user.email "****"
+
+確認
+git config --global -l
+
+リポジトリ作成
+git init
+git add ***
+git add -A
+git status
+git commit -m "first"
+
+導入後の注意点
+push -f	禁止：履歴がすべてなくなり復旧できなくなる
+cloneは１度だけ：今の状態からやりたいことをやるための方法を学ぶこと
+
+用語
+ローカル
+リポジトリ
+
+コミット：ファイルの追加や変更をリポジトリに保存
+プッシュ：ファイルの追加や変更をリモートリポジトリにアップロードすること
+
+基本的な流れ
+１．リポジトリ作成（git init）または複製（git clole）
+２．ファイルの作成編集
+４．ファイルの変更をgitのインデックスに追加（git add）
+５．ローカルリポジトリをプッシュしてリモートリポジトリへ反映させる（git push）
+
+ディレクトリで作成：
+git init
+git add filename
+git commit -m "add new file"
+git status
+git remote add origin https://github.com/macole/note.git/
+git push origin master
+
