@@ -1,0 +1,17 @@
+Node-Red
+スタート
+https://127.0.0.1:1880
+
+接続
+Inject
+function
+rpi-gpio
+
+プログラム
+context.state=context.state || 0;
+if(context.state==0)
+  context.state=1;
+else
+  context.state=0;
+  msg.payload=context.state;
+return msg;
