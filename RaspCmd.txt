@@ -1,0 +1,49 @@
+コマンドとテキスト
+入力するコマンドやテキストのうち、長いコマンドやテキストをこちらに掲載しています。 長くて入力するのが大変…という場合は、以下よりコピー＆ペーストで入力していただいても結構です。
+
+＜TIPS＞
+コマンドやファイルのパスを途中まで入力してESCキー（もしくはTABキー）を2回押すと候補が表示されます。候補が1つだけの場合は自動的に入力されるので、長いコマンドやファイル名を入力する際に便利です。
+
+3-4 P.71 Raspberry Pi を日本語化しよう
+sudo apt-get install ttf-kochi-gothic xfonts-intl-japanese xfonts-intl-japanese-big xfonts-kaname
+sudo apt-get install uim uim-anthy
+sudo apt-get install jfbterm
+
+
+4-3 P.101 Open JTalkのインストールと設定
+sudo apt-get install open-jtalk open-jtalk-mecab-naist-jdic hts-voice-nitech-jp-atr503-m001 libhtsengine1
+
+
+5-8 P.134 MJPG-Streamerのダウンロード
+sudo apt-get install subversion libjpeg-dev imagemagick
+svn co https://svn.code.sf.net/p/mjpg-streamer/code/mjpg-streamer mjpg-streamer
+
+
+5-3 P.135 MJPG-Streamerのシェルスクリプト(1)
+LD_LIBRARY_PATH=/usr/local/lib mjpg_streamer -i "input_uvc.so -f 10 -r 320x240 -d /dev/video0 -y" -o "output_http.so -w /usr/local/www -p 8080 -c test:1234"
+
+
+5-3 P.135 MJPG-Streamerのシェルスクリプト(2)
+#!/bin/sh
+PORT="8080"
+ID="test"
+PW="1234"
+SIZE="320x240"
+FRAMERATE="10"
+
+export LD_LIBRARY_PATH=/usr/local/lib
+mjpg_streamer \
+-i "input_uvc.so -f $FRAMERATE -r $SIZE -d /dev/video0 -y" \
+-o "output_http.so -w /usr/local/www -p $PORT -c $ID:$PW"
+
+
+5-3 P.140 Ustreamのシェルスクリプト(1)
+#!/bin/sh
+SIZE="352x288" # 動画のサイズ
+FRAMERATE="30" # フレームレート
+RTMP_URL="rtmp://x.xxxxxxxx.fme.ustream.tv/ustreamVideo/xxxxxxxx"
+STREAM_KEY="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+avconv -r $FRAMERATE -s $SIZE \
+-f video4linux2 -i /dev/video0 \
+-f flv "$RTMP_URL/$STREAM_KEY flashver=FME/3.0\20(compatible;\20FMSc/1.0)"
