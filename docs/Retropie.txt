@@ -1,0 +1,8 @@
+1.インストール
+２．ゲームパットの設定
+間違えても、メニューから再設定できる
+３．
+apt-get update
+apt-get upgrade -y
+Expand filesystem
+Overclock

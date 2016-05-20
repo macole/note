@@ -1,0 +1,101 @@
+Python
+・Dualshock操作
+・GPIO操作
+
+NodeJS
+・Net読み込み
+・解析
+・GPIO操作（Webiopi_proxy.js
+
+
+Shell
+・他のプログラム起動
+・音声合成
+・Tweet
+
+
+NodeJSからコマンド実行
+https://nodejs.org/api/child_process.html
+
+var exec = require('child_process').exec;
+exec('ls -la ./', function(err, stdout, stderr){
+  if (err) { console.log(err); } 
+});
+
+
+shellHelper.js を使用すれば複数行のシェルコマンドも簡単に実行できます。
+
+var shell = require('./shellHelper');
+shell.series([
+  'cd ../',
+  'cd ../',
+  'ls -la'
+], function(err){
+  if (err) { console.log(err); } 
+  }
+});
+
+基本的にパッケージは
+
+アプリケーションごとにインストールするものだと覚えておけば良い。
+
+アプリケーション用にインストールする場合:
+
+npm install <パッケージ名>
+グローバルにインストールする場合:
+
+npm install -g <パッケージ名>
+
+
+
+pythonで外部のシェルスクリプトやコマンドを実行する方法
+外部のシェルスクリプトを実行するとなると２パターンあるのですが返り値が違います。
+os.system('ls -la')
+　　コマンドが成功すれば0が返ってきます。
+commands.getoutput("ls -la")
+　　実際に実行した結果が返ってきます。
+subprocess
+この中のsubprocess.check_outputを使います。
+使い方としては、引数に文字列を入れるわけですが、二通りあって、まず、デフォルトで使う場合には、
+check_output(["cut", "-d", "test.txt"])
+とします。
+
+もう一つは、引数にshell=Trueを使うことで、文字列を渡すと実行できるようになり、
+check_output("cut -d test.txt", shell=True)
+
+Unix で shell=False の場合 (デフォルト): この場合、 Popen クラスは子プログラムを実行するのに os.execvp() を使います。 文字列が引数として与えられた場合、実行されるプログラムの名前かパスとして使われます；ただし、プログラムは引数無しの場合のみ動作します。
+Unix で shell=True の場合: args が文字列の場合、シェルを介して実行されるコマンドライン文字列を指定します。文字列は厳密にシェルプロンプトで打つ形式と一致しなければなりません。例えば、文字列の中にスペースを含むファイル名がある場合、はクォーティングかバックスラッシュエスケープが必要です。 args が文字列の場合には最初の要素はコマンド名を表わす文字列としてそして残りの要素は続く引数としてシェルに渡されます。これは、以下の Popen と等価ということです。
+
+簡単なサンプル
+
+適当にファイル作って、2列目を獲得する(cut -d, -f2)サンプルです。
+3系なのでbytesで値が帰ってきます。（str返してくれるオプション(キーワード引数)ありそうだけど）
+３系の場合、返ってくるのがbytesなので、コードの最後にありますが、universal_newlines=Trueつけるとstrで返ってきます。
+
+subprocess_test.py
+>>> open("test.txt", 'w').write('\n'.join(([repr([i, i+1, i+2]).replace(' ', '') for i in range(5)])))
+39
+>>> open("test.txt").read()
+'[0,1,2]\n[1,2,3]\n[2,3,4]\n[3,4,5]\n[4,5,6]'
+>>>
+>>> import subprocess
+>>> subprocess.check_output(["cut", "-d,", "-f2", "test.txt"])
+b'1\n2\n3\n4\n5\n'
+>>> subprocess.check_output("cut -d, -f2 test.txt", shell=True)
+b'1\n2\n3\n4\n5\n'
+>>> subprocess.check_output("cut -d, -f2 test.txt", shell=True, universal_newlines=True)
+'1\n2\n3\n4\n5\n'
+
+推奨されている方法
+subprocessモジュールのcall()や、check_call()、check_output()を使う。
+call()は、プロセスの終了ステータスを返す。
+
+import subprocess
+subprocess.call('ls')
+
+check_call()はそれに加え、エラー時には例外を投げる。
+subprocess.check_call('ls')
+
+check_output()はコマンドを実行した結果を返し、エラー時には例外を投げる。
+subprocess.check_output('ls')
+

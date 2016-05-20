@@ -1,0 +1,69 @@
+コントロール
+
+Dualshock3の利用に挑戦。
+まずは、Bluetoothを使えるようにしないといけません。
+そこで、Raspberry PiでBluetoothを使うために Planex の BT-Micro3H2Xを使うことにしました。
+このアダプタは無線LANとBluetoothのコンボになっているため、１つのUSBポートで無線LANとBluetoothを利用できるようになります。
+
+まずは、Bluetoothを使えるようにするために、
+
+　　　sudo apt-get update
+　　　sudo apt-get install bluetooth bluez-utils bluez-compat bluez-hcidump
+　　　sudo apt-get install libusb-dev libbluetooth-dev
+
+で、Bluetooth 周りのインストールを行います。
+　これで、lsusb でドングルが認識されていることと、
+
+　　　/etc/init.d/bluetooth status
+
+として、bluetooth in running. のメッセージが返ってくることを確認します。
+
+　この先は、さきのこちらのページ を見て頂ければ、手順が親切に解説されていますが、一応、写しを掲載させて頂きます。
+　まず、ペアリング用のツールを準備します。
+
+　　　wget "http://www.pabr.org/sixlinux/sixpair.c" -O sixpair.c
+
+として、ここからペアリングツールをおとしてきて、コンパイルします。
+
+　　　gcc -o sixpair sixpair.c -lusb
+
+コンパイルが通ったら、一旦、USBケーブルでDualShock3とRaspberry Piを接続して、
+
+PSボタンを押して、DualShock3のスイッチを入れて、
+　　　sudo ./sixpair
+
+とすると、
+
+　　　Current Bluetooth master: xx:xx:xx:xx:xx:xx
+　　　Setting master bd_addr to: xx:xx:xx:xx:xx:xx
+
+のような表示が出てペアリングが行われます。DualShock3とRaspberry Pi のUSBケーブルを外します。
+
+　次に QtSixA のソースコードをダウンロードして、そのうちの、sixadの部分をコンパイルします。
+
+　　　wget "https://sourceforge.net/projects/qtsixa/files/QtSixA%201.5.1/QtSixA-1.5.1-src.tar.gz/download” -O QtSixA-src.tar.gz
+
+展開します。
+
+　　　tar zxvf QtSixA-src.tar.gz
+
+sixad のディレクトリに移動して、コンパイルしてインストールします。
+
+　　　cd QtSixA-1.5.1/sixad
+　　　make
+　　　sudo make install
+
+sixadを起動します。
+
+　　　sudo sixad -start
+
+DualShock3のPSボタンを押して接続します。Connected Sony Entertainment Wireless Controllerと表示されて、接続されます。とりあえず、
+
+　　　cat /dev/input/js0
+
+して、コントローラを傾けたり、ボタンやアナログスティックを操作すると何かしらのバイナリっぽいデータが画面に出力されるのが確認できるはずです。Ctrl+Cで中断します。
+
+
+
+
+　これで、Xboxのレシーバをぶら下げた状態に比べると随分スッキリしました。USBポートも片方空いた状態にできました。

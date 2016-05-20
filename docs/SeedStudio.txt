@@ -1,0 +1,41 @@
+http://www.seeedstudio.com/wiki/Grove_Indoor_Environment_Kit_for_Edison
+https://github.com/Seeed-Studio/Grove_Indoor_Environment_Demo
+
+商品内容： - 
+Grove ベースシールド V2 - Grove モジュール（11種） 　- 
+LCD RGB バックライト 　- 
+温湿度センサー 　- 
+リレー 　- 
+土壌湿度センサー 　- 
+サーボ 　- 
+光センサー 　- 
+ブザー 　-
+UVセンサー 　- 
+PIRモーションセンサー（人感センサー） 　- 
+ロータリー エンコーダー 　- 
+ボタン - 
+9V DCプラグ付きジャックアダプター（2.1mm） 　- 
+Grove接続用ケーブル（26AWG）x10 　- 
+USBケーブル
+チュートリアル（WIKI） http://www.seeedstudio.com/wiki/Grove_Indoor_Environment_Kit_for_Edison 
+サンプルプログラム（GitHub） https://github.com/Seeed-Studio/Grove_Indoor_Environment_Demo 
+
+
+https://learn.sparkfun.com/tutorials/sparkfun-inventors-kit-for-edison-experiment-guide/introduction
+
+
+Base Shield V2 x1
+Grove - Tempture&Humidity Sensor (High-Accuracy &Mini) x1
+Grove - Moisture sensor x1
+Grove - Light Sensor x1
+Grove - UV Sensor x1
+Grove - PIR Motion Sensor x1
+Grove - Encoder x1
+Grove - Button x1
+Grove - LCD RGB Backlight x1
+Grove - Relay x1
+Grove - Servo x1
+Grove - Buzzer x1
+9V to Barrel Jack Adapter x1
+26AWG Grove Cable x10
+USB Cable x1

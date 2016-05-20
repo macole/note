@@ -1,0 +1,63 @@
+サンスマート　RFIDマスターキット
+
+プロジェクト教本（英語）：
+https://s3-ap-northeast-1.amazonaws.com/sain-amzn/20/20-013-300/pracitse.rar
+https://s3-ap-northeast-1.amazonaws.com/sain-amzn/20/20-013-105/UNO+R3+Starter+Kit+Tutoral+105.rar
+https://s3-ap-northeast-1.amazonaws.com/sain-amzn/20/20-013-105/extension+projects.rar
+商品資料：
+https://s3-ap-northeast-1.amazonaws.com/sain-amzn/20/20-013-105/Nixie.rar
+https://s3-ap-northeast-1.amazonaws.com/sain-amzn/20/20-013-105/8_8.rar
+
+驚きの４８商品キット
+1x SainSmart UNO R3 board
+1x Prototype Shield 
+1x Mini Breadboard 
+1x 1602LCD
+1x USB Cable
+2x Buzzer
+6x Nixie Tube
+1x 74HC595 Chip
+1x Infrared Remote Control
+1x Photoresistor
+1x 5K Potentiometer
+1x 10K Potentiometer
+1x MAX7219 LED Display IC
+5x Small Push-buttons
+10x Big Push-buttons
+10x Red LED
+10x Green LED
+10x Yellow LED
+5X RGB LED
+1xTilt sensor
+1x940nm infrared LED
+1x RGB Model
+1x DC Motor
+1x 5V stepper motor
+1x stepper motor driver test model
+1x water sensor model
+1x Flame Sensor
+1x LM35 temperature sensor
+1x VS1838B Universal Infrared Receiving Head
+1x 830 tie point Breadboard
+1x Micro servo 9G SG90
+1x HC-SR04 Ultrasonic Distance Sensor
+1x Sainsmart opto-couple 1 channel relay
+1x 4 x 4 Matrix Array 16 Key Membrane Switch Keypad
+1x 2.54mm Straight 40 Pin Header
+1x 2.54mm Elbow 40 Pin Header
+10x Dupont Lines(Female to Female)
+1x Arduino joystick25x Jumper wires
+5x 1K Resistors
+20x 10K Resistors
+20x 220 Resistors
+1x DC 9v Battery Box including the cable
+1x 8*8 Dot Matrix Display
+1x SainSmart RFID-RC522 module
+1x The standard S50 blank IC card
+1x S50 special-shaped card (as shown by the key ring shape)
+1x Straight, curved rows of pin of the article
+1x Cell Box 
+1x Tutorials (more than 60 pages,PDF)
+
+注意
+操作言語と教本は全部英語となります。
