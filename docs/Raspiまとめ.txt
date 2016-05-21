@@ -1,11 +1,11 @@
-Python
+﻿Python
 ・Dualshock操作
 ・GPIO操作
 
 NodeJS
 ・Net読み込み
 ・解析
-・GPIO操作（Webiopi_proxy.js
+・GPIO操作（Webiopi_proxy.js raspi-io)
 
 
 Shell

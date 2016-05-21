@@ -23,6 +23,7 @@ http.get(url,function(res){
             if(forecast['dateLabel']=='今日'){
                 weather=forecast['telop'];
                 console.log(weather);
+                console.log(forcast);
             }
         }
     });

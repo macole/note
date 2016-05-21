@@ -1,0 +1,42 @@
+﻿<!DOCTYPE HTML>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<script src="https://cdn.pubnub.com/pubnub.min.js"></script>
+<script src="https://code.jquery.com/jquery-2.1.4.min.js"></script>
+<script>
+  $(function(){
+    var publishKey = 'pub-c-93d56a31-bf8d-4f8d-8f85-babc40968f2f'
+    var subscribeKey = 'sub-c-8be5544a-1840-11e6-b700-0619f8945a4f';
+    var channel = "led-onoff" // channel名の設定
+    // PubNub初期化
+    var pubnub = PUBNUB.init({
+      publish_key   : publishKey,
+      subscribe_key : subscribeKey
+    });
+    // データの送信
+    function publish(action) {
+      var value = {'action': action};
+      pubnub.publish({
+        channel : channel,
+        message : value,
+        callback: function(message){
+          console.log(message);
+        }
+      });
+    }
+    // [ON]ボタンのクリックで文字列「on」を送信
+    $('#on-button').click(function(){
+      publish('on');
+    });
+    // [OFF]ボタンのクリックで文字列「off」を送信
+    $('#off-button').click(function(){
+      publish('off');
+    });
+</script>
+</head>
+<body>
+  <button id="on-button">ON</button>
+  <button id="off-button">OFF</button>
+</body>
+</html>
