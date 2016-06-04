@@ -1,0 +1,9 @@
+
+
+http://www.ibm.com/developerworks/jp/bluemix/
+ID miyoshi-masato@fujielectric.com
+PASS
+
+https://console.ng.bluemix.net/
+https://console.ng.bluemix.net/?direct=classic
+

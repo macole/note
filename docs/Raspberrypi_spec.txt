@@ -1,0 +1,103 @@
+ラズベリーパイの性能
+価格
+発売日
+ROM
+RAM
+CPU
+
+source: raspberry-pi.ksyic.com
+
+３５ドル
+64bitのARM Cortex-53クアッドコア
+１	10倍
+
+Raspberry Pi 3の演算性能向上は、
+Broadcom製の新SoC BCM2837
+
+Raspberry Pi 2 Model B
+は32bitのARM Cortex-A7 クアッドコア900MHzでしたが、新モデルRaspberry Pi 3は64bitのARM Cortex-A53クアッドコア1.2GHzになりました。
+
+Raspberry PiファウンデーションのCEO Uben Upton氏によれば、CPUコア変更の主な目的は、32bitモードでのパフォーマンスを向上させること。クロック数の向上とアーキテクチャ上の改良により、新CPUコアは32bitモードで走らせても従来モデルより 50～60%速く、初代のRaspberry Pi比では最大10倍高速になったとしています。各種ソフトウェアやツールセットの64bitモード移行は「今後数か月にわたって意義を評価する」との表現です。
+
+実世界アプリケーションで初代Raspberry Piと比較した速度は、シングルスレッドで2.5倍、NEONを使うビデオコーデックで20倍以上など。グラフィック部分は従来モデルから引き継いだVideoCore IVサブシステムが400MHz、3Dコアが300MHz動作します。
+
+SoC/CPUは歴代同様BroadCom社製、ただし今回はコアが64bit化された「BCM2837」を採用。クアッドコアで最大クロックは1.2GHzと、前モデルのBCM2836（4コア/900MHz）を大きく上回り、パフォーマンスは約50%アップしている。ただし、メモリ容量は前モデルと同じ1GB、3D性能がやや向上したもののGPU性能はほぼ同水準だ。
+
+ラズパイ2は旧機種から約6倍の性能にアップしているということで、どれほどの処理能力があるのかを見たくて、重そうなアプリを選んだ結果がプレステエミュだったわけで、別にいまさらPS1を本気で遊ぶつもりはないです(^^;
+
+PSのゲームディスクからイメージを作成する
+
+PSのゲームディスク(CD)をそのまま使う方法もあると思いますが、今回はCDからイメージファイルを作成し、Raspberry PI 2のSDカードにコピーして使用することにしました。
+
+イメージ作成ソフトは色々ありますが、私はCD Manipulatorを使いました。以下のサイトからFinal版が入手可能です。
+
+CD Manipulator跡地
+http://www.storeroom.info/cdm/
+
+作成したイメージファイルをRaspberryのSDカードに転送する方法ですが、私はTeratermのSCP機能で転送しました。PSゲームのイメージサイズはどれも数百MBあると思いますが、現状、16GBのmicroSDカードの空きは十分なので余裕でした。
+
+転送のやり方ですがTeratermからSSHでRaspberryにログイン後、TeratermのファイルメニューからSSH SCPを選択して、指示にしたがってファイルを転送します。
+
+PCSX Rearmedをインストール
+
+エミュレーターはPCSX ReARMedです。PCSXという有名なエミュレーターがありますが、これをARMに移植した物になります。BIOSファイルがなくても一応動くのでお手軽ですね。
+
+PCSX Rearmedにはlibsdl1.2-devが必要なので、まずはこれをインストールします。
+
+1
+sudo apt-get install libsdl1.2-dev
+続いてPCSX Rearmedの最新版(r18)をgitから落として、インストールします。makeにはかなり時間がかかります。
+
+1
+2
+3
+4
+5
+6
+7
+cd $HOME
+git clone https://github.com/notaz/pcsx_rearmed
+cd pcsx_rearmed
+git submodule init && git submodule update
+./configure
+make
+sudo cp pcsx /usr/local/bin/
+今回、音声はRaspberry PI 2本体のヘッドフォンジャック使って出力しますので、出力先を指定します。
+
+1
+amixer cset numid=3 1
+コントローラーはPS3用のDUALSHOCKの手持ちがあったので、こちらをUSBコネクタに接続して使おうと思います。
+
+1
+2
+sudo apt-get install joystick
+sudo jstest --normal /dev/input/js0
+コントローラーのボタンを押して、画面に反応があればOKです。
+
+PCSX_Rearmedを起動する
+
+いよいよ、エミュレーターを起動しますが、コンソール上で動かすとハングアップした時などにOSごとフリーズしてしまうことがあるようなので、X Windows上で動かすことにします。
+
+ということで、まずはX windowsを起動します。
+
+1
+startx
+X Windows上でターミナルを開き、そこで以下のコマンドでエミュレータを起動します。
+
+1
+pcsx -cdfile rtype.bin
+pcsx_running
+
+動きました(^O^) 音もバッチリですが、コントローラーが使えません・・ うーむ。
+
+ESCキーからメニューに入り、各種設定ができるのできるのですが、DUALSHOCK自体は認識しているようなのですが、左のアナログパッド以外が反応しません。残念ですが、コントローラーは諦めることにしました。
+
+キーボードは反応するので、とりあえず、正常に動作することは確認。また、右上にCPU使用率が小さく出ているのですが、約11%程度ですね。Raspberry PI 2にPSエミュは軽すぎたようです。もっと重いアプリにトライしたくなりますw
+
+レトロフリーク (レトロゲーム互換機) (コントローラーアダプターセット) 【Amazon.co.jp限定】 コントローラー +1個、オリジナルカラー仕様
+レトロフリーク (レトロゲーム互換機) (コントローラーアダプターセット) 【Amazon.co.jp限定】 コントローラー +1個、オリジナルカラー仕様
+サイバーガジェット
+参考価格￥ 24,840
+価格￥ 21,950(2016/05/20 17:09時点)
+発売日2015/10/31
+商品ランキング1,467位

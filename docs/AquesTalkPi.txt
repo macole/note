@@ -1,0 +1,250 @@
+私の環境ではhttp://192.168.0.101/miku/
+にindex.phpを置いてウェブからコントロールできるようにしています。
+
+
+<?php
+//Miku Talk
+
+	if($_POST["talk"]) {
+		exec("jsay ".$_POST["talk"]);
+	}
+	
+?>
+
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Miku Talk</title>
+<link rel="stylesheet"
+  href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js">
+</script>
+
+<style type="text/css">  
+<!-- 
+    #header, #footer {
+          background-color: #f09199;
+			color: #ebf6f7;
+	}
+-->  
+</style>
+</head>
+<body>
+<div data-role="page">
+  <div data-role="header" id="header">
+    <h1>Miku Talk</h1>
+  </div>
+  <div role="main" class="ui-content">
+    
+
+<form action="index.php" method="post">
+  
+  しゃべる内容：<br />
+  <textarea name="talk" cols="30" rows="5"></textarea><br />
+  <br />
+  <input type="submit" value="しゃべる" />
+</form>
+
+
+  </div>
+  <div data-role="footer" id="footer">
+    <h3><a href="http://www.nakatayuki.com/" >nakata yuki</a></h3>
+  </div>
+</div>
+</body>
+</html>
+
+
+現在時刻をしゃべるスクリプト↓
+
+
+; html-script: false ]#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use feature qw/say/;
+use Time::Piece;
+
+my $t = localtime;
+my $now = $t->strftime("%p%I時%M分");
+$now =~ s/00分//; # ちょうどx時の場合は分を省略する
+$now =~ s/12時/零時/;
+
+system("jsay ${now}です");
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+; html-script: false ]#!/usr/bin/env perl
+ 
+use strict;
+use warnings;
+use feature qw/say/;
+use Time::Piece;
+ 
+my $t = localtime;
+my $now = $t->strftime("%p%I時%M分");
+$now =~ s/00分//; # ちょうどx時の場合は分を省略する
+$now =~ s/12時/零時/;
+ 
+system("jsay ${now}です");
+天気をしゃべるスクリプト↓
+
+
+; html-script: false ]#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use utf8;
+use feature qw/say/;
+use WebService::Livedoor::Weather;
+use Data::Printer;
+
+my $city_id = '170010';
+
+my $lw = WebService::Livedoor::Weather->new;
+my $weather = $lw->get($city_id);
+
+#p $weather;
+
+my $talk = "天気概況 $weather->{title}。$weather->{description}{text}。";
+$talk =~ s/n//g; # 改行があると音声がそこで途切れるため
+
+system(qq|jsay "$talk"|);
+
+$talk = "天気予報 "; # 一度に渡しすぎるとセグメンテーション違反になるため
+
+for my $forecast (@{ $weather->{forecasts} })
+{
+    my $date = $forecast->{date};
+    $date =~ s/[0-9]{4}-([0-9]{2})-([0-9]{2})/${1}月${2}日/;
+    $date =~ s/0([0-9])/$1/; # 01月 -> 1月
+
+    my $date_label = $forecast->{dateLabel};
+
+    my $telop = $forecast->{telop};
+    $telop = 'あさって' if $telop eq '明後日';
+
+    my $kion_max = $forecast->{temperature}{max}{celsius};
+    my $kion_min = $forecast->{temperature}{min}{celsius};
+
+    $talk .= "$date_label${date}は${telop}。";
+    $talk .= "最高気温は${kion_max}度。" if defined $kion_max;
+    $talk .= "最低気温は${kion_min}度。" if defined $kion_min;
+}
+
+$talk =~ s/n/ /g; # 改行があると音声がそこで途切れるため
+$talk .= "以上、天気予報をお伝えしました。";
+
+system(qq|jsay "$talk"|);
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+; html-script: false ]#!/usr/bin/env perl
+ 
+use strict;
+use warnings;
+use utf8;
+use feature qw/say/;
+use WebService::Livedoor::Weather;
+use Data::Printer;
+ 
+my $city_id = '170010';
+ 
+my $lw = WebService::Livedoor::Weather->new;
+my $weather = $lw->get($city_id);
+ 
+#p $weather;
+ 
+my $talk = "天気概況 $weather->{title}。$weather->{description}{text}。";
+$talk =~ s/n//g; # 改行があると音声がそこで途切れるため
+ 
+system(qq|jsay "$talk"|);
+ 
+$talk = "天気予報 "; # 一度に渡しすぎるとセグメンテーション違反になるため
+ 
+for my $forecast (@{ $weather->{forecasts} })
+{
+    my $date = $forecast->{date};
+    $date =~ s/[0-9]{4}-([0-9]{2})-([0-9]{2})/${1}月${2}日/;
+    $date =~ s/0([0-9])/$1/; # 01月 -> 1月
+ 
+    my $date_label = $forecast->{dateLabel};
+ 
+    my $telop = $forecast->{telop};
+    $telop = 'あさって' if $telop eq '明後日';
+ 
+    my $kion_max = $forecast->{temperature}{max}{celsius};
+    my $kion_min = $forecast->{temperature}{min}{celsius};
+ 
+    $talk .= "$date_label${date}は${telop}。";
+    $talk .= "最高気温は${kion_max}度。" if defined $kion_max;
+    $talk .= "最低気温は${kion_min}度。" if defined $kion_min;
+}
+ 
+$talk =~ s/n/ /g; # 改行があると音声がそこで途切れるため
+$talk .= "以上、天気予報をお伝えしました。";
+ 
+system(qq|jsay "$talk"|);
+これらをcronに登録しておくと、時報鳴らしたり、朝食食べながら天気予報聞けたりできます。
+
+GoogleカレンダーとかGmailとかもしゃべらせたいですね。
+
+cronではplenv関連で少しハマったけど、echo $PATHで出てくるのを「PATH=hogehoge」みたいな形でcronの設定ファイルの最上部に書いたら上手く動きました。
+
+ちなみに声は↓のような感じ

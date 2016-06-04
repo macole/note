@@ -1,34 +1,27 @@
-⑤ Raspbianの自動ログイン・実行
-起動するたびにディスプレイとキーボードを使ってログインしなくてはなりません。
-Arduinoのように起動するとある動作をして欲しいので、自動ログインと自動実行の設定をします。
+﻿1.Raspbianの自動ログイン・実行
+自動ログインと自動実行の設定をします。
 
  1. 自動ログインの設定をします。
  以下のファイルを開いて編集します。
-        sudo vim /etc/inittab
-
-		1:2345:respawn:/sbin/getty 38400 tty1
-        の行を#でコメントアウトします。 そのすぐしたの行に以下の行を
-        1:2345:respawn:/bin/login -f pi tty1 /dev/tty1 2>&1
-ただし、現在は自動起動になっている。
-
+>sudo vim /etc/inittab
+1:2345:respawn:/sbin/getty 38400 tty1
+の行を#でコメントアウトします。 そのすぐしたの行に以下の行を
+1:2345:respawn:/bin/login -f pi tty1 /dev/tty1 2>&1
 
 ２.自動起動の設定
- Raspberry Piを起動した時に、WebSocketサーバーが自動起動するように設定します。Rubyで作ったWebSocketサーバを自動起動してみます。
+Raspberry Piを起動した時に、WebSocketサーバーが自動起動するように設定します。
+Rubyで作ったWebSocketサーバを自動起動してみます。
 
- nanoで/etc/rc.localを編集します。
+>nanoで/etc/rc.localを編集します。
 $sudo nano /etc/rc.local
- 以下の内容に変更します。
- （「exit 0」の前に「ruby /home/pi/mugbot_server_v1_0_0.rb &」を追加します。）
- 
- 
+以下の内容に変更します。「exit 0」の前に「ruby /home/pi/mugbot_server_v1_0_0.rb &」を追加します。
+
 exit 0の前に
 ruby /home/pi/mubogt_server_v1_0_0.rb &
- を追加します。（mubogt_server_v1_0_0.rbはWebSocketサーバのファイル名）
+を追加します。（mubogt_server_v1_0_0.rbはWebSocketサーバのファイル名）
+&をつけないと、先に行けずに止まってしまいます。
 
-最初にruby、最後に&をつけます。これが大事です。
- つけないとフォラグラウンドで実行されて、いつまでたっても解放されずコマンド受付状態になりません。
- &をつけないと、先に行けずに止まってしまいます。
- mugbot_server_v1_0_0.rbに実行権を付与します。
+mugbot_server_v1_0_0.rbに実行権を付与します。
 $chmod +x /home/pi/mugbot_server_v1_0_0.rb
  自動起動が出来ているか再起動して確認します。
 $ sudo reboot
@@ -56,6 +49,10 @@ $ vi bin/my-script.sh
 
 SCRIPT_PATH=/home/pi/script/
 $OCTOPRINT_HOME/run
+
+Setup
+amixer cset numid=3 1
+alsamixer
 
 ４．音が鳴るか確認。
 サイン波 

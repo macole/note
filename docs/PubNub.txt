@@ -1,0 +1,32 @@
+工知能ライブラリ TensorFlow 
+
+PubNub
+https://www.pubnub.com/
+
+masato344apple@gmai.com
+Ne10stadpi@
+
+PubKey	pub-c-93d56a31-bf8d-4f8d-8f85-babc40968f2f
+SubKey	sub-c-8be5544a-1840-11e6-b700-0619f8945a4f
+sec-c-NTkxN2I0YzktNGMwNS00OWQ5LTgxNmItNDMxMmFjOTNhMmY3
+
+NodeJS用のSDKをインストール
+npm install pubnub
+先に事前準備が必要
+sudo apt-get update
+sudo apt-get upgrade 
+sudo reboot
+nodeJSのインストール
+wget https://nodejs.org/dist/v4.2.6/node-v4.2.6-llinux-armv7l.tar.gz
+tar -xvf node-v4.2.6-linux-armv7l.tar.gz
+cd node-v4.2.6-linux-armv7l
+sudo cp -R * /usr/local
+
+node -v
+
+mkdir js
+cd js
+npm install raspi-io
+npm install johnney-five
+
+

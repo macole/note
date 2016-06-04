@@ -1,0 +1,610 @@
+﻿録音と再生に対応
+録音したいとき（AACで出力（拡張子.m4a）で、録音中は音が出ない）
+再生	radiko.sh -p TBS/YFM
+録音	radiko.sh -t 120 TBS/YFM
+
+インストール
+Radiko.sh
+sudo apt-get install rtmpdump ffmpeg mplayer swftools wget
+wget https://gist.githubusercontent.com/soramugi/836952a6b09e540eb6a3/raw/81182ff0a1f5003077a479e0e947b66fb5d3b99e/radiko.sh
+chmod +x radiko.sh
+
+radiko.sh -d 出力先 -f ファイル名 -t 録音時間 -s 00:01:00 CH
+
+-d:出力先のパス。省略可。デフォルトは実行ユーザのホームディレクトリ。
+-f:ファイル名（日本語名もOK）。省略可。デフォルトは「チャンネル名_年月日_時分_プロセスID」。
+-t:録音時間（分で指定）。省略可。デフォルトは１分。
+   0を指定すると無制限。Ctrl+C等で中断できる。
+-s:ffmpegでデコードする際の開始位置を指定。省略可。デフォルトは開始位置調整なし。
+   指定方法は「00:00:00」（時:分:秒）
+   録音開始時間に余裕を持たせて起動した際に、その余裕分をカットして保存したい場合に指定する
+   例えば放送開始１分前に起動させて -s 00:01:00 と指定すると、最初の１分間をカットして保存する
+CH:チャンネル名。必須。ラジコのチャンネル名。
+
+例）radiko.sh -d music -f 大竹まことのゴールデンラジオ -t 151 -s 00:01:00 QRR
+ 　　出力先＝~/music
+ 　　ファイル名＝大竹まことのゴールデンラジオ
+ 　　録音時間＝151分
+ 　　最初の１分間は保存しない
+ 　　チャンネル＝文化放送
+ 
+再生したいとき（録音されない）
+radiko.sh -p -t 再生時間 CH
+
+-p:録音でなく、再生する場合に指定する。値は無し。
+-t:再生時間（分で指定）。省略可。デフォルトは０（無制限）。
+　　再生を止めるには再生時間満了まで待つか、Ctrl+Cで中断。
+CH:チャンネル名。必須。ラジコのチャンネル名。
+
+例）radiko.sh -p -t 120 TBS
+　　再生時間＝120分
+　　チャンネル＝ＴＢＳ
+
+例）radiko.sh -p YFM
+　　チャンネル＝ＦＭヨコハマ
+　　Ctrl+C等で中断するまで再生
+チャンネル一覧http://www.dcc-jpl.com/foltia/wiki/radikomemo
+有名所はここら辺だろうか - TBS # TBSラジオ - QRR # 文化放送 - LFR # ニッポン放送
+
+再生
+./radiko.sh -p LFR
+録音
+./radiko.sh TBS
+mplayer *.m4a
+オプション指定しないとカレントディレクトリに1分だけ録音ファイル名チャンネル名_年月日_時分_プロセスID.m4aが作成される。
+---------------------------
+ラジオを再生してみよう
+$ play_radiko.sh TBS
+$ play_radiko.sh QRR
+
+インストール
+$ sudo apt-get install mplayer
+$ sudo apt-get install rtmpdump swftools libxml2-utils
+
+mplayerで持っている音声ファイルmp3の音が出るか試してみてください。
+$ mplayer 音声ファイル.mp3
+
+2. play_radiko.shをダウンロード
+play_radiko.sh　シェルスクリプトを下のリンクからダウンロードしてください。
+https://gist.github.com/ihsoy-s/5292735
+
+play_radiko.sh　を編集します。作成するディレクトリを指定します。
+私はoutdirを下の変更しました。
+outdir="/home/pi/radio/"
+
+これで /home/pi/radio/ディレクトリが作成されるようになります。
+$ sudo chmod +x play_radiko.sh
+$ sudo cp play_radiko.sh /usr/bin/play_radiko.sh
+
+3. ラジオを再生してみよう
+$ play_radiko.sh TBS
+$ play_radiko.sh QRR
+ラジオ曲の放送局IDは以下のリンクで確認できます。
+http://www.dcc-jpl.com/foltia/wiki/radikomemo
+-eq 1	チャンネル確認
+
+
+4. ブラウザからリモートコントロール。
+IPアドレスを固定してウェブサーバーを立ててください。定番のapacheでもいいです。
+IPアドレスは毎回起動時に変動すると面倒なので固定IPアドレスにします。
+
+5. ウェブサーバーから音を鳴らせるようにしよう。
+ブラウザからコマンドを実行させて音を鳴るようにする必要があります。
+
+$ sudo usermod -G www-data, audio www-data
+要するにウェブサーバーをaudioグループに追加しています。
+apacheやnginx, ともにデフォルトでwww-dataになっています。
+
+6. index.phpを作成しよう。
+ウェブサーバーを無事に立てれたとします。
+
+以下のphpをindex.phpで保存して、ウェブルートに置いてください。
+<?php
+//radiko player
+//http://www.nakatayuki.com/
+
+
+if(isset($_GET['id'])){
+
+	$id = $_GET['id'];
+	if($id=="stop"){
+		exec("killall mplayer");
+	}else if($id=="CCL"){
+		exec("killall mplayer");
+		exec("play_radiko.sh CCL", $e);
+	}else if($id=="802"){
+		exec("killall mplayer");
+		exec("play_radiko.sh 802", $e);
+	}else if($id=="ABC"){
+		exec("killall mplayer");
+		exec("play_radiko.sh ABC", $e);
+	}else if($id=="MBS"){
+		exec("killall mplayer");
+		exec("play_radiko.sh MBS", $e);
+	}else if($id=="OBC"){
+		exec("killall mplayer");
+		exec("play_radiko.sh OBC", $e);
+	}else if($id=="RN1"){
+		exec("killall mplayer");
+		exec("play_radiko.sh RN1", $e);
+	}else if($id=="RN2"){
+		exec("killall mplayer");
+		exec("play_radiko.sh RN2", $e);
+	}else if($id=="CRK"){
+		exec("killall mplayer");
+		exec("play_radiko.sh CRK", $e);
+	}else if($id=="KISSFMKOBE"){
+		exec("killall mplayer");
+		exec("play_radiko.sh KISSFMKOBE", $e);
+	}else if($id=="HOUSOU-DAIGAKU"){
+		exec("killall mplayer");
+		exec("play_radiko.sh HOUSOU-DAIGAKU", $e);
+	}
+}
+?>
+<html>
+<head>
+<meta name="viewport" content="width=device-width">
+</head>
+<body>
+<p><a href="index.php?id=stop">stop</a></p>
+<ul>
+<li><a href="index.php?id=802">FM 802</a></li>
+<li><a href="index.php?id=CCL">FM COCOLO</a></li>
+<li><a href="index.php?id=ABC">ABC Radio</a></li>
+<li><a href="index.php?id=MBS">MBS Radio</a></li>
+<li><a href="index.php?id=OBC">OBC Radio Osaka</a></li>
+<li><a href="index.php?id=RN1">Radio NIKKEI 1</a></li>
+<li><a href="index.php?id=RN2" >Radio NIKKEI2</a></li>
+<li><a href="index.php?id=CRK" >CRK Radio Kansai</a></li>
+<li><a href="index.php?id=KISSFMKOBE" >Kiss FM KOBE</a></li>
+<li><a href="index.php?id=HOUSOU-DAIGAKU" >HOUSOU DAIGAKU</a></li>
+</ul>
+</body>
+</html>
+ 
+ radiko player
+
+パソコンからラズベリーパイにアクセスしたところ。
+IPアドレスにアクセスします。私の環境ではhttp://192.168.0.101　です。
+ラジオ曲をクリックするとラジオの再生が始まります。STOPで停止ができます。
+
+radiko 参加放送局一覧
+2012/11/01現在 (APIで確認して下さい)
+
+放送局名(一般名称)	name(APIで返してくる名称)	ID(識別子)
+ラジオNIKKEI第1放送	ラジオNIKKEI第1	RN1
+ラジオNIKKEI第2	ラジオNIKKEI第2	RN2
+放送大学	HOUSOU-DAIGAKU
+北海道放送	HBCラジオ	HBC
+STVラジオ	STVラジオ	STV
+エフエム北海道	AIR-G'（FM北海道）	AIR-G
+IBC岩手放送(岩手県)	IBCラジオ	IBC
+東北放送(宮城県)	TBCラジオ	TBC
+ラジオ福島(福島県)	FBCラジオ	FBC
+TBSラジオ	TBSラジオ	TBS
+文化放送	文化放送	QRR
+ニッポン放送	ニッポン放送	LFR
+Inter FM	Inter FM	INT
+TOKYO FM	TOKYO FM	FMT
+J-WAVE	J-WAVE	FMJ
+茨城放送	茨城放送	IBS
+アール・エフ・ラジオ日本	RFラジオ日本	JORF
+エフエム栃木	RADIO BERRY	RADIOBERRY
+ベイエフエム	bayfm	BAYFM78
+エフエムナックファイブ	NACK5	NACK5
+横浜エフエム放送	FMヨコハマ	YFM
+エフエム群馬	FMぐんま	FMGUNMA
+新潟放送(新潟県)	ＢＳＮラジオ	BSN
+エフエムラジオ新潟(新潟県)	FM NIIGATA	FMNIIGATA
+新潟県民エフエム(新潟県)	FM PORT	FMPORT
+北日本放送(富山県)	ＫＮＢラジオ	KNB
+富山エフエム放送(富山県)	ＦＭとやま	FMTOYAMA
+朝日放送	ABCラジオ	ABC
+毎日放送	MBSラジオ	MBS
+ラジオ大阪	ラジオ大阪	OBC
+FM COCOLO	FM COCOLO	CCL
+FM802	FM802	802
+FM OSAKA	FM OSAKA	FMO
+エフエム滋賀	e-radio FM滋賀	E-RADIO
+京都放送	KBS京都	KBS
+エフエム京都	α-STATION FM京都	ALPHA-STATION
+ラジオ関西	CRK
+和歌山放送	WBS
+兵庫エフエム放送	Kiss FM KOBE	KISSFMKOBE
+中部日本放送	CBCラジオ	CBC
+東海ラジオ	TOKAIRADIO
+岐阜放送	ぎふチャン	GBS
+ZIP-FM	ZIP-FM	ZIP-FM
+三重エフエム放送	radio CUBE FM三重	FMMIE
+エフエム愛知	FM AICHI	FMAICHI
+中国放送	RCC
+広島エフエム	広島FM	HFM
+RKB毎日放送	RKBラジオ	RKB
+KBC九州朝日放送	KBCラジオ	KBC
+ラブエフエム国際放送	Love FM	LOVEFM
+エフエム福岡	FM FUKUOKA	FMFUKUOKA
+静岡放送	SBSラジオ	SBS
+静岡エフエム放送	K-MIX SHIZUOKA	K-MIX
+信越放送	SBCラジオ	SBC
+長野エフエム放送	ＦＭ長野	FMN
+北陸放送	MRO北陸放送ラジオ	MRO
+エフエム石川	HELLOFIVE
+南日本放送	ＭＢＣラジオ	MBC
+福井放送	FBCラジオ	FBC
+山陰放送	BSSラジオ	BSS
+RNB南海放送	RNB南海放送	RNB
+長崎放送	NBC長崎放送	NBC
+エフエム長崎	FM長崎	FMNAGASAKI
+熊本放送	RKKラジオ	RKK
+エフエム熊本	FMKエフエム熊本	FMK
+大分放送(大分県)	OBSラジオ	OBS
+エフエム大分(大分県)	エフエム大分	FM_OITA
+宮崎放送(宮崎県)	宮崎放送	MRT
+(参考:公式配信エリア情報) 
+(震災復興期間限定ラジオ7局(アイビーシー岩手放送、東北放送、ラジオ福島、茨城放送、エフエム岩手、エフエム仙台、エフエム福島)を除く
+再生URL
+http://radiko.jp/player/player.html#[ID] 
+例:http://radiko.jp/player/player.html#QRR 
+
+録音
+簡易radiko録音ツール。要swftools — Gist 
+radikoが3/11以来録音出来なくなっていた :宗子時空 
+簡易 radiko.jpプレミアム対応 Radiko 録音スクリプト rec_radiko2.sh
+
+地域別番組表XML取得
+http://radiko.jp/v2/api/program/today?area_id=[area_id] 
+http://radiko.jp/v2/api/program/tomorrow?area_id=[area_id] 
+例:http://radiko.jp/v2/api/program/today?area_id=JP13 
+例:http://radiko.jp/v2/api/program/tomorrow?area_id=JP13 
+放送局別番組表XML取得
+http://radiko.jp/v2/api/program/station/weekly?station_id=[ID] 
+例:http://radiko.jp/v2/api/program/station/weekly?station_id=QRR 
+どうも月曜の朝に週一回ペースで更新されているようで、月曜日の朝にはそれから一週間分の予定が取得できる。 日曜の深夜には過去の番組表になってしまった古いデータしか取得できない様子。 つねに未来一週間分が取得できるわけではないよう。
+
+放送局XML取得
+http://radiko.jp/v2/station/list/[area_id].xml 
+例:http://radiko.jp/v2/station/list/JP13.xml 
+エリアコード対照表
+[ISO 3166-2:JP準拠]
+
+area_id	area_name
+JP1	HOKKAIDO JAPAN
+JP2	AOMORI JAPAN
+JP3	IWATE JAPAN
+JP4	MIYAGI JAPAN
+JP5	AKITA JAPAN
+JP6	YAMAGATA JAPAN
+JP7	FUKUSHIMA JAPAN
+JP8	IBARAKI JAPAN
+JP9	TOCHIGI JAPAN
+JP10	GUNMA JAPAN
+JP11	SAITAMA JAPAN
+JP12	CHIBA JAPAN
+JP13	TOKYO JAPAN
+JP14	KANAGAWA JAPAN
+JP15	NIIGATA JAPAN
+JP16	TOYAMA JAPAN
+JP17	ISHIKAWA JAPAN
+JP18	FUKUI JAPAN
+JP19	YAMANASHI JAPAN
+JP20	NAGANO JAPAN
+JP21	GIFU JAPAN
+JP22	SHIZUOKA JAPAN
+JP23	AICHI JAPAN
+JP24	MIE JAPAN
+JP25	SHIGA JAPAN
+JP26	KYOTO JAPAN
+JP27	OSAKA JAPAN
+JP28	HYOGO JAPAN
+JP29	NARA JAPAN
+JP30	WAKAYAMA JAPAN
+JP31	TOTTORI JAPAN
+JP32	SHIMANE JAPAN
+JP33	OKAYAMA JAPAN
+JP34	HIROSHIMA JAPAN
+JP35	YAMAGUCHI JAPAN
+JP36	TOKUSHIMA JAPAN
+JP37	KAGAWA JAPAN
+JP38	EHIME JAPAN
+JP39	KOUCHI JAPAN
+JP40	FUKUOKA JAPAN
+JP41	SAGA JAPAN
+JP42	NAGASAKI JAPAN
+JP43	KUMAMOTO JAPAN
+JP44	OHITA JAPAN
+JP45	MIYAZAKI JAPAN
+JP46	KAGOSHIMA JAPAN
+JP47	OKINAWA JAPAN
+
+らじる★らじる番組表XML取得
+http://cgi4.nhk.or.jp/hensei/api/sche-nr.cgi?tz=all&ch=[CH]&date=[YYYY-MM-DD] 
+ch=netr1 : NHK第1 
+ch=netr2 : NHK第2 
+ch=netfm : NHK-FM 
+例:http://cgi4.nhk.or.jp/hensei/api/sche-nr.cgi?tz=all&ch=netr1&date=2012-05-19 
+
+Radiko
+
+録音したいとき（AACで出力（拡張子.m4a）で、録音中は音が出ない）
+
+radiko.sh -d 出力先 -f ファイル名 -t 録音時間 -s 00:01:00 CH
+
+-d:出力先のパス。省略可。デフォルトは実行ユーザのホームディレクトリ。
+-f:ファイル名（日本語名もOK）。省略可。デフォルトは「チャンネル名_年月日_時分_プロセスID」。
+-t:録音時間（分で指定）。省略可。デフォルトは１分。
+   0を指定すると無制限。Ctrl+C等で中断できる。
+-s:ffmpegでデコードする際の開始位置を指定。省略可。デフォルトは開始位置調整なし。
+   指定方法は「00:00:00」（時:分:秒）
+   録音開始時間に余裕を持たせて起動した際に、その余裕分をカットして保存したい場合に指定する
+   例えば放送開始１分前に起動させて -s 00:01:00 と指定すると、最初の１分間をカットして保存する
+CH:チャンネル名。必須。ラジコのチャンネル名。
+
+例）radiko.sh -d music -f 大竹まことのゴールデンラジオ -t 151 -s 00:01:00 QRR
+ 　　出力先＝~/music
+ 　　ファイル名＝大竹まことのゴールデンラジオ
+ 　　録音時間＝151分
+ 　　最初の１分間は保存しない
+ 　　チャンネル＝文化放送
+再生したいとき（録音されない）
+
+radiko.sh -p -t 再生時間 CH
+
+-p:録音でなく、再生する場合に指定する。値は無し。
+-t:再生時間（分で指定）。省略可。デフォルトは０（無制限）。
+　　再生を止めるには再生時間満了まで待つか、Ctrl+Cで中断。
+CH:チャンネル名。必須。ラジコのチャンネル名。
+
+例）radiko.sh -p -t 120 TBS
+　　再生時間＝120分
+　　チャンネル＝ＴＢＳ
+
+例）radiko.sh -p YFM
+　　チャンネル＝ＦＭヨコハマ
+　　Ctrl+C等で中断するまで再生
+チャンネル一覧http://www.dcc-jpl.com/foltia/wiki/radikomemo
+http://www.dcc-jpl.com/foltia/wiki/radikomemo
+
+再生
+
+./radiko.sh -p LFR
+録音
+
+./radiko.sh TBS
+mplayer *.m4a
+オプション指定しないとカレントディレクトリに1分だけ録音ファイル名チャンネル名_年月日_時分_プロセスID.m4aが作成される。
+
+現状だとssh繋げてコマンド叩く必要あるけど(十分ちゃ十分だけど)ボタン押してラジオ再生とか選局とか、pebbleで再生できるようにしたりとかすると便利楽しいカモですね(やりたい)
+公式のフォーラムでもインターネットラジオのこと議論してるトピックあった。こっちの情報もみると有益ですね。 http://www.raspberrypi.org/forums/viewtopic.php?f=82&t=45424
+
+
+１. mplayerとrtmpdumpをインストールします。
+
+$ sudo apt-get install mplayer
+$ sudo apt-get install rtmpdump swftools libxml2-utils
+
+2. play_radiko.shをダウンロード
+
+play_radiko.sh　シェルスクリプトを下のリンクからダウンロードしてください。
+ https://gist.github.com/ihsoy-s/5292735
+
+play_radiko.sh　を編集します。
+作成するディレクトリを指定します。私はoutdirを下の変更しました。
+outdir="/home/pi/radio/"
+これで /home/pi/radio/ディレクトリが作成されるようになります。
+
+$ sudo chmod +x play_radiko.sh
+$ sudo cp play_radiko.sh /usr/bin/play_radiko.sh
+
+3. ラジオを再生してみよう
+
+試しにFM COCOLOを流してみましょう。
+$ play_radiko.sh CCL 
+
+FM 802を再生してみましょう。
+$ play_radiko.sh 802
+
+CCLがFM COCOLOです。802がFM 802。
+ラジオ曲の放送局IDは以下のリンクで確認できます。
+http://www.dcc-jpl.com/foltia/wiki/radikomemo
+ 
+4. ブラウザからリモートコントロールしよう。
+ラズベリーパイからラジオを再生することができたら、ブラウザからリモートコントロールできるようにしましょう。
+私は軽量のnginxとphpでウェブサーバーを立てています。定番のapacheでもいいです。
+IPアドレスは192.168.0.101にしています。
+IPアドレスは毎回起動時に変動すると面倒なので固定IPアドレスにします。
+
+5. ウェブサーバーから音を鳴らせるようにしよう。
+ブラウザからコマンドを実行させて音を鳴るようにする必要があります。
+
+$ usermod -G www-data, audio www-data
+要するにウェブサーバーをaudioグループに追加しています。
+apacheやnginx, ともにデフォルトでwww-dataになっていますので、これで良いと思います。
+更新の仕方が分からないので、ここで一度再起動しました。
+
+6. index.phpを作成しよう。
+ウェブサーバーを無事に立てれたとします。
+以下のphpをindex.phpで保存して、ウェブルートに置いてください。
+
+
+<?php
+//radiko player
+//http://www.nakatayuki.com/
+
+
+if(isset($_GET['id'])){
+
+	$id = $_GET['id'];
+	if($id=="stop"){
+		exec("killall mplayer");
+	}else if($id=="CCL"){
+		exec("killall mplayer");
+		exec("play_radiko.sh CCL", $e);
+	}else if($id=="802"){
+		exec("killall mplayer");
+		exec("play_radiko.sh 802", $e);
+	}else if($id=="ABC"){
+		exec("killall mplayer");
+		exec("play_radiko.sh ABC", $e);
+	}else if($id=="MBS"){
+		exec("killall mplayer");
+		exec("play_radiko.sh MBS", $e);
+	}else if($id=="OBC"){
+		exec("killall mplayer");
+		exec("play_radiko.sh OBC", $e);
+	}else if($id=="RN1"){
+		exec("killall mplayer");
+		exec("play_radiko.sh RN1", $e);
+	}else if($id=="RN2"){
+		exec("killall mplayer");
+		exec("play_radiko.sh RN2", $e);
+	}else if($id=="CRK"){
+		exec("killall mplayer");
+		exec("play_radiko.sh CRK", $e);
+	}else if($id=="KISSFMKOBE"){
+		exec("killall mplayer");
+		exec("play_radiko.sh KISSFMKOBE", $e);
+	}else if($id=="HOUSOU-DAIGAKU"){
+		exec("killall mplayer");
+		exec("play_radiko.sh HOUSOU-DAIGAKU", $e);
+	}
+}
+?>
+<html>
+<head>
+<meta name="viewport" content="width=device-width">
+</head>
+<body>
+<p><a href="index.php?id=stop">stop</a></p>
+<ul>
+<li><a href="index.php?id=802">FM 802</a></li>
+<li><a href="index.php?id=CCL">FM COCOLO</a></li>
+<li><a href="index.php?id=ABC">ABC Radio</a></li>
+<li><a href="index.php?id=MBS">MBS Radio</a></li>
+<li><a href="index.php?id=OBC">OBC Radio Osaka</a></li>
+<li><a href="index.php?id=RN1">Radio NIKKEI 1</a></li>
+<li><a href="index.php?id=RN2" >Radio NIKKEI2</a></li>
+<li><a href="index.php?id=CRK" >CRK Radio Kansai</a></li>
+<li><a href="index.php?id=KISSFMKOBE" >Kiss FM KOBE</a></li>
+<li><a href="index.php?id=HOUSOU-DAIGAKU" >HOUSOU DAIGAKU</a></li>
+</ul>
+</body>
+</html>
+ 
+ radiko player
+パソコンからラズベリーパイにアクセスしたところ。
+IPアドレスにアクセスします。私の環境ではhttp://192.168.0.101　です。
+ラジオ曲をクリックするとラジオの再生が始まります。
+STOPで停止ができます。
+
+ラズベリーパイでラジオライフを楽しんでくださあい。でわ。 
+http://www.nakatayuki.com/archives/1039468785.html
+
+
+ラズベリーパイでラジオのradikoを再生しよう！2
+前回作成したindex.phpにcssデザインを施して見栄えよくしましょう。
+スマホからアクセスするので、JQUERY MOBILEを使ってCSSデザインしてみました。
+
+index.phpで保存してください。
+
+
+<?php
+//Radiko Player
+//http://www.nakatayuki.com
+
+
+if(isset($_GET['id'])){
+
+	$id = $_GET['id'];
+	if($id=="stop"){
+		exec("killall mplayer");
+	}else if($id=="CCL"){
+		exec("killall mplayer");
+		exec("play_radiko.sh CCL", $e);
+	}else if($id=="802"){
+		exec("killall mplayer");
+		exec("play_radiko.sh 802", $e);
+	}else if($id=="ABC"){
+		exec("killall mplayer");
+		exec("play_radiko.sh ABC", $e);
+	}else if($id=="MBS"){
+		exec("killall mplayer");
+		exec("play_radiko.sh MBS", $e);
+	}else if($id=="OBC"){
+		exec("killall mplayer");
+		exec("play_radiko.sh OBC", $e);
+	}else if($id=="RN1"){
+		exec("killall mplayer");
+		exec("play_radiko.sh RN1", $e);
+	}else if($id=="RN2"){
+		exec("killall mplayer");
+		exec("play_radiko.sh RN2", $e);
+	}else if($id=="CRK"){
+		exec("killall mplayer");
+		exec("play_radiko.sh CRK", $e);
+	}else if($id=="KISSFMKOBE"){
+		exec("killall mplayer");
+		exec("play_radiko.sh KISSFMKOBE", $e);
+	}else if($id=="HOUSOU-DAIGAKU"){
+		exec("killall mplayer");
+		exec("play_radiko.sh HOUSOU-DAIGAKU", $e);
+	}
+}
+?>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Radiko Player</title>
+<link rel="stylesheet"
+  href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js">
+</script>
+
+<style type="text/css">  
+<!-- 
+    #header, #footer {
+          background-color: #ffea00;
+			color: #493759;
+	}
+-->  
+</style>
+</head>
+<body>
+<div data-role="page">
+  <div data-role="header" id="header">
+    <h1>Radiko Player</h1>
+  </div>
+  <div role="main" class="ui-content">
+    <!--リストを準備-->
+
+	<ul data-role="listview" data-inset="true">
+        <li><a href="index.php?id=stop">stop</a></li>
+    </ul>
+
+    <ul data-role="listview" data-inset="true">
+        <li><a href="index.php?id=802">FM 802</a></li>
+		<li><a href="index.php?id=CCL">FM COCOLO</a></li>
+		<li><a href="index.php?id=ABC">ABC Radio</a></li>
+		<li><a href="index.php?id=MBS">MBS Radio</a></li>
+		<li><a href="index.php?id=OBC">OBC Radio Osaka</a></li>
+		<li><a href="index.php?id=RN1">Radio NIKKEI 1</a></li>
+		<li><a href="index.php?id=RN2">Radio NIKKEI 2</a></li>
+		<li><a href="index.php?id=CRK">CRK Radio Kansai</a></li>
+		<li><a href="index.php?id=KISSFMKOBE" >Kiss FM KOBE</a></li>
+		<li><a href="index.php?id=HOUSOU-DAIGAKU" >HOUSOU DAIGAKU</a></li>
+    </ul>
+  </div>
+  <div data-role="footer" id="footer">
+    <h3><a href="http://www.nakatayuki.com/" >nakata yuki</a></h3>
+  </div>
+</div>
+</body>
+</html>
+
+ 
+「Raspberry PI」カテゴリの最新記事
+
+

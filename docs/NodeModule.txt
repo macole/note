@@ -1,0 +1,27 @@
+Nodeモジュール
+１．一覧
+２．モジュール検索
+自分がよく使うサイトを紹介します。
+Node.JS Modules		タグのインクリメンタル検索機能が便利。希望の機能を持ったモジュールが探しやすくなっています。
+The Node Toolbox	カテゴリ毎にモジュールが分類されています。人気度合いや信頼性の目安も量れます。
+npm registry		npm本家です。過去1日、1週間、1ヶ月のダウンロード数が分かるので、似たようなモジュールの中でどれを使おうか悩んだ時の参考になります。
+github - connect Contrib Middleware	connectのミドルウェアに限定したモジュール一覧です。
+
+
+３．モジュールの作成・使用
+foo.js の内容:
+
+var circle = require('./circle.js');
+console.log( 'The area of a circle of radius 4 is '
+           + circle.area(4));
+circle.js の内容:
+
+var PI = Math.PI;
+
+exports.area = function (r) {
+  return PI * r * r;
+};
+
+exports.circumference = function (r) {
+  return 2 * PI * r;
+};

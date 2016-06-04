@@ -1,0 +1,95 @@
+<?php
+//Radiko Player
+//http://www.nakatayuki.com
+
+
+if(isset($_GET['id'])){
+
+	$id = $_GET['id'];
+	if($id=="stop"){
+		exec("killall mplayer");
+	}else if($id=="CCL"){
+		exec("killall mplayer");
+		exec("play_radiko.sh CCL", $e);
+	}else if($id=="802"){
+		exec("killall mplayer");
+		exec("play_radiko.sh 802", $e);
+	}else if($id=="ABC"){
+		exec("killall mplayer");
+		exec("play_radiko.sh ABC", $e);
+	}else if($id=="MBS"){
+		exec("killall mplayer");
+		exec("play_radiko.sh MBS", $e);
+	}else if($id=="OBC"){
+		exec("killall mplayer");
+		exec("play_radiko.sh OBC", $e);
+	}else if($id=="RN1"){
+		exec("killall mplayer");
+		exec("play_radiko.sh RN1", $e);
+	}else if($id=="RN2"){
+		exec("killall mplayer");
+		exec("play_radiko.sh RN2", $e);
+	}else if($id=="CRK"){
+		exec("killall mplayer");
+		exec("play_radiko.sh CRK", $e);
+	}else if($id=="KISSFMKOBE"){
+		exec("killall mplayer");
+		exec("play_radiko.sh KISSFMKOBE", $e);
+	}else if($id=="HOUSOU-DAIGAKU"){
+		exec("killall mplayer");
+		exec("play_radiko.sh HOUSOU-DAIGAKU", $e);
+	}
+}
+?>
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Radiko Player</title>
+<link rel="stylesheet"
+  href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css" />
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script>
+<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js">
+</script>
+
+<style type="text/css">  
+<!-- 
+    #header, #footer {
+          background-color: #ffea00;
+			color: #493759;
+	}
+-->  
+</style>
+</head>
+<body>
+<div data-role="page">
+  <div data-role="header" id="header">
+    <h1>Radiko Player</h1>
+  </div>
+  <div role="main" class="ui-content">
+    <!--リストを準備-->
+
+	<ul data-role="listview" data-inset="true">
+        <li><a href="index.php?id=stop">stop</a></li>
+    </ul>
+
+    <ul data-role="listview" data-inset="true">
+        <li><a href="index.php?id=802">FM 802</a></li>
+		<li><a href="index.php?id=CCL">FM COCOLO</a></li>
+		<li><a href="index.php?id=ABC">ABC Radio</a></li>
+		<li><a href="index.php?id=MBS">MBS Radio</a></li>
+		<li><a href="index.php?id=OBC">OBC Radio Osaka</a></li>
+		<li><a href="index.php?id=RN1">Radio NIKKEI 1</a></li>
+		<li><a href="index.php?id=RN2">Radio NIKKEI 2</a></li>
+		<li><a href="index.php?id=CRK">CRK Radio Kansai</a></li>
+		<li><a href="index.php?id=KISSFMKOBE" >Kiss FM KOBE</a></li>
+		<li><a href="index.php?id=HOUSOU-DAIGAKU" >HOUSOU DAIGAKU</a></li>
+    </ul>
+  </div>
+  <div data-role="footer" id="footer">
+    <h3><a href="http://www.nakatayuki.com/" >nakata yuki</a></h3>
+  </div>
+</div>
+</body>
+</html>
