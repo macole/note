@@ -1,0 +1,77 @@
+.main-view {
+	color: white;
+	padding: 28px 45px;
+	margin: auto;
+	width: 850px;
+}
+
+.main-view code {
+	color: white;
+}
+
+.main-view code .entity {
+	color: cyan;
+}
+
+.main-view code .ok {
+	color: green;
+}
+
+.main-view code .yellow {
+	color: yellow;
+}
+
+.main-view code .header {
+	font-weight: 900;
+}
+
+.main-title {
+	margin-top: 15px;
+	margin-bottom: 6px;
+	font-size: 35px;
+}
+
+.text-version {
+	text-align: center;
+    font-size: 12px;
+}
+
+.sub-title {
+    margin-bottom: 40px;
+	color: #a292ff;
+	font-size: 25px;
+}
+
+.btn-group-download {
+    word-spacing: 13px;
+    margin-bottom: 60px;
+}
+
+.btn-group-download > .btn {
+	min-width: 200px;
+	height: 48px;
+	padding: 0;
+	border: none;
+	border-bottom: 4px solid rgb(0, 132, 158);
+	border-radius: 0;
+	background: rgb(0, 174, 209);
+    font-size: 14px;
+    word-spacing: 0;
+    cursor: default;
+}
+
+.btn-group-download > .btn > a {
+	color: white !important;
+	text-decoration: none !important;
+	display: inline-block;
+	width: 100%;
+	height: 100%;
+	line-height: 44px;
+}
+
+.screenshot-wrap {
+    display: inline-block;
+    padding: 10px 15px;
+    margin: 5px 0 22px 0;
+    background: black;
+}

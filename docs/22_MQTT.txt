@@ -1,0 +1,46 @@
+﻿MQTT
+
+>Link
+Edison:Sampleコード	http://www.shoeisha.co.jp/book/download/9784798143392/detail
+MQTTサーバ	https://sango.shiguredo.jp/dashboard
+
+接続先	tcp://lite.mqtt.shiguredo.jp:1883
+WebSocket接続先	ws://lite.mqtt.shiguredo.jp/mqtt
+アクセス先トピック	macole@github/#
+ユーザー名	macole@github
+パスワード
+ 
+>ドキュメント
+http://mitsuruog.github.io/what-mqtt/
+Websocketの上をMQTTが走ることですべてのブラウザがMQTTデバイスになることができます。
+今回はmcollina/mowsを使いました。
+
+Node.jsで動かしたときとあまり大差ない。mowsは内部的にMQTT.jsのAPIをコールしています。
+注意する点としては接続先のプロトコルがmqtt://からws://に変わっているとこでしょうか。
+Brokerによってはmqtt://とws://での接続先ポートが異なる場合がありますのでご注意ください。
+また、BrokerがWebsocketに対応している必要があります。
+
+まとめ
+MQTTクライアントをブラウザ上で動かすにはWebsocketを使う。
+デモのWebページではmosquitto社が提供するテスト用のBrokerに接続しています。
+チャットアプリ程度ではまだMQTTの本当の価値って気付きにくいですが、ノード側で配置さえるセンサー機器を想像すると、Topicの考え方ってマッチしている。一番身近なところではFacebook messengerでつかっているそうです。
+
+>インストール
+MQTT Brokerとしては、mosquittoを使用します。以下の手順でインストールしてください。
+$ sudo apt-get install mosquitto mosquitto-clients
+
+もう一方の端末からメッセージを送ってみます。
+$ mosquitto_pub -t mqtt/sample -m TEST
+
+もう一方のたんまつでメッセージを受信します
+mosquitto_sub -t mqtt/sample -v
+オプション：-h 192.168.0.XXX
+
+例　時雨堂
+sudo temper/temper | mosquitto_pub -h lite.mqtt.shiguredo.jp -u "ledsun@github" -t "ledsun@github/temper" -P XXXX -s
+
+export MQTT_HOST="lite.mqtt.shiguredo.jp"
+export MQTT_PORT="1883"
+export MQTT_USERNAME="ledsun@github"
+export MQTT_PASSWORD="XXXX"
+mqttcli sub -t "ledsun@github/temper"

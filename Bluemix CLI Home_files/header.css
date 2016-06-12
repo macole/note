@@ -1,0 +1,84 @@
+.main-header {
+  height: 51px;
+  line-height: 50px;
+  min-width: 1200px;
+  border-bottom-color: #3E4D57;
+  background: #26343F;
+  font-family: HelvNeueLightforIBM, HelveticaNeue-Light, "Helvetica Neue Light", HelveticaNeue, "Helvetica Neue", Helvetica, arial, "Lucida Grande", sans-serif;
+  font-weight: 200;
+}
+
+.main-header .i-logo-gray {
+  margin: 9px 0 0 10px;
+}
+
+.main-header .text-ibm {
+  padding-left: 14px;
+  font-size: 14px;
+  color: white;
+}
+
+.main-header .text-product-name {
+  margin-left: 4px;
+  font-size: 14px;
+  color: white;
+  font-family: "HelveticaNeue-Bold", "Helvetica Neue Bold", "HelveticaNeue", "Helvetica Neue", Helvetica, arial, "Lucida Grande", sans-serif;
+  font-weight: 700;
+}
+
+.main-header > ul {
+  margin: 0;
+  margin-right: 22px;
+  padding: 0;
+}
+
+.main-header > ul > li > a {
+  margin: 0 10px;
+  padding: 0 2px;
+  height: 50px;
+  display: block;
+  text-decoration: none;
+  font-size: 14px;
+  font-weight: 300;
+  font-stretch: normal;
+  letter-spacing: 0.6px;
+  color: #b3b3b3;
+}
+
+.main-header > ul > li > a.pad {
+  padding: 0 6px;
+}
+
+.main-header > ul > .active > a {
+  border-bottom: 4px solid #00b299;
+  color: white;
+  cursor: default;
+}
+
+.main-header > ul > li > a:hover {
+  color: white;
+}
+
+.main-header .dropdown {
+  border-left: solid 1pt #3E4D57;
+  padding: 13px 15px;
+}
+
+.i-logo-gray {
+  background-image: url("../images/sprite.png");
+  background-position: -5px -6826px;
+  width: 32px;
+  height: 32px;
+}
+
+.i-profile {
+  background-image: url("../images/user_robot_grey_24.png");
+  background-size: 24px;
+  background-origin: content-box;
+  background-clip: content-box;
+  -webkit-box-sizing: content-box;
+  -moz-box-sizing: content-box;
+  box-sizing: content-box;
+  width: 24px;
+  height: 24px;
+}

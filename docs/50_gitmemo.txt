@@ -1,4 +1,4 @@
-Gitの導入
+﻿Gitの導入
 
 １．Gitアカウントの作成
 ２．Gitツールのインストール
@@ -41,4 +41,5 @@ git commit -m "add new file"
 git status
 git remote add origin https://github.com/macole/note.git/
 git push origin master
+git clone https://
 

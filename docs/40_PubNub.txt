@@ -1,4 +1,4 @@
-工知能ライブラリ TensorFlow 
+人工知能ライブラリ TensorFlow 
 
 PubNub
 https://www.pubnub.com/

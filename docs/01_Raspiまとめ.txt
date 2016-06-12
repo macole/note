@@ -1,4 +1,31 @@
-﻿Python
+﻿Raspberry Piまとめ
+
+>ハードウェア
+機器	Model B+
+
+>OSインストール
+NOOBS
+https://www.raspberrypi.org/downloads/
+
+>起動・ログイン
+ID：pi	PASS:raspberry
+
+>テキストエディタ
+>sudo nano testfile.txt
+>startx
+
+>アップデート・インストール
+sudo apt-get update
+sudo apt-get upgrade
+
+Delete
+>sudo apt-get autoremove lynx
+
+>日本語化
+sudo raspi-config
+
+---------------------------------------------------
+Python
 ・Dualshock操作
 ・GPIO操作
 
@@ -7,12 +34,10 @@ NodeJS
 ・解析
 ・GPIO操作（Webiopi_proxy.js raspi-io)
 
-
 Shell
 ・他のプログラム起動
 ・音声合成
 ・Tweet
-
 
 NodeJSからコマンド実行
 https://nodejs.org/api/child_process.html
@@ -21,7 +46,6 @@ var exec = require('child_process').exec;
 exec('ls -la ./', function(err, stdout, stderr){
   if (err) { console.log(err); } 
 });
-
 
 shellHelper.js を使用すれば複数行のシェルコマンドも簡単に実行できます。
 
@@ -35,10 +59,7 @@ shell.series([
   }
 });
 
-基本的にパッケージは
-
-アプリケーションごとにインストールするものだと覚えておけば良い。
-
+基本的にパッケージはアプリケーションごとにインストールするものだと覚えておけば良い。
 アプリケーション用にインストールする場合:
 
 npm install <パッケージ名>
@@ -46,14 +67,14 @@ npm install <パッケージ名>
 
 npm install -g <パッケージ名>
 
-
-
+------------------------------------------------------------------
+外部プログラムの起動
+>Python
 pythonで外部のシェルスクリプトやコマンドを実行する方法
 外部のシェルスクリプトを実行するとなると２パターンあるのですが返り値が違います。
-os.system('ls -la')
-　　コマンドが成功すれば0が返ってきます。
-commands.getoutput("ls -la")
-　　実際に実行した結果が返ってきます。
+os.system('ls -la')	コマンドが成功すれば0が返ってきます。
+commands.getoutput("ls -la")	実際に実行した結果が返ってきます。
+
 subprocess
 この中のsubprocess.check_outputを使います。
 使い方としては、引数に文字列を入れるわけですが、二通りあって、まず、デフォルトで使う場合には、
@@ -64,7 +85,11 @@ check_output(["cut", "-d", "test.txt"])
 check_output("cut -d test.txt", shell=True)
 
 Unix で shell=False の場合 (デフォルト): この場合、 Popen クラスは子プログラムを実行するのに os.execvp() を使います。 文字列が引数として与えられた場合、実行されるプログラムの名前かパスとして使われます；ただし、プログラムは引数無しの場合のみ動作します。
-Unix で shell=True の場合: args が文字列の場合、シェルを介して実行されるコマンドライン文字列を指定します。文字列は厳密にシェルプロンプトで打つ形式と一致しなければなりません。例えば、文字列の中にスペースを含むファイル名がある場合、はクォーティングかバックスラッシュエスケープが必要です。 args が文字列の場合には最初の要素はコマンド名を表わす文字列としてそして残りの要素は続く引数としてシェルに渡されます。これは、以下の Popen と等価ということです。
+Unix で shell=True の場合: args が文字列の場合、シェルを介して実行されるコマンドライン文字列を指定します。
+文字列は厳密にシェルプロンプトで打つ形式と一致しなければなりません。
+例えば、文字列の中にスペースを含むファイル名がある場合、はクォーティングかバックスラッシュエスケープが必要です。
+args が文字列の場合には最初の要素はコマンド名を表わす文字列としてそして残りの要素は続く引数としてシェルに渡されます。
+これは、以下の Popen と等価ということです。
 
 簡単なサンプル
 
