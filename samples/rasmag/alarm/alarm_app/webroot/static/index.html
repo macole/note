@@ -1,0 +1,42 @@
+<html>
+<head>
+    <meta charset='utf-8' />
+    <title>アラームアプリ</title>
+    <link rel='stylesheet' href='./libs/bootstrap-3.3.6-dist/css/bootstrap.min.css' />
+    <link rel='stylesheet' href='./libs/bootstrap-3.3.6-dist/css/bootstrap-theme.min.css' />
+    <link rel='stylesheet' href='./libs/jquery-ui-1.11.4/jquery-ui.min.css' />
+    <link rel='stylesheet' href='./libs/jquery-ui-1.11.4/jquery-ui.theme.min.css' />
+</head>
+<body>
+  <div class='panel panel-default'>
+    <div class='panel-heading'>アラームアプリ</div>
+    <div class='panel-body'>
+      アラームパネルの一覧取得ボタンをクリックすると現在登録されているエントリーを表示することができます。また、アラーム変更入力フォームパネルのID、ファイル名、開始時刻に値を入力して更新ボタンをクリックするとエントリーを追加することができます。
+    </div>
+  </div>
+  <div class='panel panel-info'>
+    <div class='panel-heading'>アラーム</div>
+    <div class='panel-body'>
+      <button id='get_entries' type='button' class='btn btn-default'>一覧取得</button>
+      <ul id='ul_entreis'></ul>
+    </div>
+  </div>
+  <div class='panel panel-info'>
+    <div class='panel-heading'>アラーム変更入力フォーム</div>
+    <div class='panel-body'>
+      <table>
+        <tr><td>ID</td><td> : <input type='text' id='entry_id' style='width:20em'></td></tr>
+        <tr><td>開始時刻</td><td> : <input type='text' id='start_date' style='width:8em'> <select id="start_time_hh"></select>:<select id="start_time_mm"></select></td></tr>
+        <tr><td>ファイル名</td><td> : <input type='text' id='file_name' style='width:20em'></td></tr>
+      </table>
+      <button id='post_entry' type='button' class='btn btn-default'>更新</button>
+    </div>
+  </div>
+  <a href="/server/stop">サーバー停止</a>
+
+  <script type='text/javascript' src='./libs/jquery-1.12.4.min.js'></script>
+  <script type='text/javascript' src='./libs/bootstrap-3.3.6-dist/js/bootstrap.min.js'></script>
+  <script type='text/javascript' src='./libs/jquery-ui-1.11.4/jquery-ui.min.js'></script>
+  <script type='text/javascript' src='./js/app.js'></script>
+</body>
+</html>

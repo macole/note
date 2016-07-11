@@ -1,0 +1,6 @@
+#!/bin/sh
+unset GIT_DIR
+cd /home/pi/app/app005
+git pull
+python app.py
+

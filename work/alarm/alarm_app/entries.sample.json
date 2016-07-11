@@ -1,0 +1,5 @@
+[
+  {"id":"0", "start_time":"2016-06-08 19:30", "file_name":"/home/pi/Music/01.mp3" },
+  {"id":"1", "start_time":"2016-06-09 20:30", "file_name":"/home/pi/Music/02.mp3" },
+  {"id":"2", "start_time":"2016-06-10 21:30", "file_name":"/home/pi/Music/03.mp3" }
+]

@@ -1,0 +1,14 @@
+Raspberry pi 3が届いたので、以前の構成からBluetoothドングルを使用せずにSDカードだけRaspberry pi 2から3に差し替え、認識するか試してみました。
+結果、何もせずでは接続出来ず、以下の手順で再接続できました。
+$ bluetoothctl ... bluetooth設定を起動
+[bluetooth]# remove XX:XX:XX:XX:XX:XX ... 一旦ペアリング情報を削除
+[bluetooth]# scan on ... デバイスをスキャンする。ここでキーボード側からペアリング（アドバタイズ）する。
+[CHG] Device XX:XX:XX:XX:XX:XX Name: Bluetooth 3.0 Keyboard ... キーボードが見つかりました
+[bluetooth]# scan off ... デバイスのスキャンを停止
+[bluetooth]# pair XX:XX:XX:XX:XX:XX ... 見つかったデバイスに対してペアリング要求
+[bluetooth]# connect XX:XX:XX:XX:XX:XX ... Raspberry pi 2のときと異なり、なぜかConnected: noとなったので、connect
+[bluetooth]# trust XX:XX:XX:XX:XX:XX ... 次回起動時に自動接続できるよう、trustする
+ この記事は以下の記事からリンクされています
+ 
+ 
+ 

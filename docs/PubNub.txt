@@ -1,0 +1,330 @@
+【IoT開発ブログ】Raspberry Pi + Node.js + PubNub(mBaaS)で、ブラウザとIoTのリアルタイム通信を実装
+btraxでは、IoTデバイスの市場調査、UX研究を目的に、IoTプロトタイプを開発している。現在進行しているのは、社内に取り付けられたミラーボールをインターネットに接続し、様々なツール（Google Apps連携、Slack連携など）から遠隔で操作するプロジェクト。
+
+今回は社内エンジニアが、開発の過程で得られた、Raspberry Piというシングルボードコンピュータと、PubNubというリアルタイム通信が可能なmBaaS(Mobile Backend as a Service)を用いて、インターネット上から簡単にLEDの点灯を行うプロトタイプの開発方法を紹介する。Raspberry Pi2のセットアップから1から説明する。
+
+
+Raspberry Piとは
+
+Raspberry Pi(ラズベリーパイ)はARMプロセッサを搭載したシングルボードコンピュータである。2015年2月に最新の「Raspberry Pi2」が発売された。価格はなんと5,000円未満。大きさは名刺サイズで、重さはわずか45g。しかし、その実態は高性能コンピュータだ。まず代表的なOSであるLinuxを搭載できる。
+
+そしてなんとHDMI出力を持つため、ディスプレイをつなぐことも可能。さらに、USBポートを持ち、マウスやキーボードを使っての操作も行える。LANポートを持ち、インターネットにも接続可能だ。Webサイトの閲覧も行える。
+raspberry brower
+
+PubNubとは
+
+PubNubとは、モバイルアプリやIoTデバイスのバックエンド側をAPI形式で提供するmBaaS(Mobile Backend as a Service)の一種。mBaaSを使うと、サーバーサイドの開発が不要になるため、開発工数が大きく削減される。
+
+IoTデバイスを作る際には、Webやモバイルを開発するときよりもコードの記述量は少なくなる傾向があるが、WebはPHPやRuby、JavaScript、AndroidはJava、iOSはObjective C(Swift)、Raspberry Piはpythonなどと、様々な言語で開発しなければならない。各言語で通信処理を書くのはつらい。
+
+mBaaSを使うと、クライアントサイドの通信処理の記述もシンプルで楽になる。サーバーサイドとクライアントサイドの両方の開発の効率があがることから、btrax社内でのプロトタイプ開発においてmBaaSの採用を決めた。
+
+mBaaSというと、Facebook傘下のParseが有名だが、PubNubはリアルタイム通信が可能であることと、70を超える数のSDKを提供していることも特徴的である。機能に制限はあるが、無料で使うこともできる。PubNubは、IoTに力を入れており、公式サイトでスマートホームのミニチュアを紹介したり、いろいろなマイコンとの連携方法を解説している。
+
+またIoTのハッカソンも開催しており、btraxのエンジニアも参加したこともある(レポート)。 4月のハッカソンにbtraxで参加することを予定しており、それも見据えてPubNubを使うことにした。なお、PubNubはbtraxのサンフランシスコのオフィスからすぐの場所にある。
+
+開発
+
+Raspberry Piのセットアップ
+
+OSを焼き込まないといけないため、公式サイトからダウンロードしてくる。今回は初心者向けのNOOBSを使った。Micro SDカードをFAT形式でフォーマットしておく。そこにダウンロードしたZIPファイルの中身をすべてコピーする。これだけで完了である。
+
+次に、Raspberry PiにmicroSDカードを差し込み、キーボード、マウス、そしてUSBのWiFiアダプターを接続する。WiFiアダプターはPC用として売られているものが利用できる。また、Raspberry Piは有線LANも利用できる。
+
+最後に電源のMicro USBケーブル(Android用などに使われるものと同じ)を差し込み。Raspberry Piは電源をつないだ瞬間に起動するので注意しよう。起動するとWindowsやMacと同様、グラフィカルなインターフェースが表示される(15年前のPCのような画面)。OSは「Raspbian」を選択してインストールをクリックすると、インストールが始まる。しばらく待てば終了である。
+
+DSC_0509
+
+ここから、コマンドラインを使って設定していく。Webの開発者なら似たようなことはやったことがあるので取っ付きやすいだろう。
+まず、Raspberry Piのパッケージ管理システムを使って、アップデートして最新に保つ。
+
+1
+2
+$ sudo apt-get update
+$ sudo apt-get upgrade
+ファームウェアのアップデートも行う。(時間かかります)
+
+1
+$ sudo rpi-update
+vim派なのでvimを入れます。
+
+1
+$ sudo apt-get install vim
+Node.jsのインストール
+
+Raspberry Piは、Pythonが初期インストールされており、相性もいいためPythonでの実装例が多い。今回は、リアルタイム通信と相性のよいNode.jsを使う。Node.jsは初期インストールされていないため、自分でインストールする必要がある。nodebrewを使ってnodeをインストールした。公式サイトの情報に従えばよく、特に難しいことはない。
+
+1
+$ curl -L git.io/nodebrew | perl - setup
+以下を.bashrcに追加する。
+
+1
+export PATH=$HOME/.nodebrew/current/bin:$PATH
+sourceコマンドで読み込む
+
+1
+$ source ~/.bashrc
+Node.jsの最新バージョンは0.12.1だが、arm用のバイナリが提供されていない。
+
+1
+2
+3
+4
+5
+6
+7
+$ nodebrew ls-remote
+...
+v0.12.0   v0.12.1
+...
+ 
+$ nodebrew install-binary v0.12.1
+Error: Linux armv7l is not supported. at /home/pi/.nodebrew/current/bin/nodebrew line 696.
+このため、セルフビルドで最新バージョンをインストールする。ただ、ビルドに時間がかかる。1時間以上かかった。
+
+1
+2
+3
+4
+5
+$ nodebrew install v0.12.1
+fetch: http://nodejs.org/dist/v0.12.1/node-v0.12.1.tar.gz
+######################################################################## 100.0%
+creating  ./icu_config.gypi
+.....
+インストールが完了したら、nodebrewでバージョンを指定する。
+
+1
+2
+3
+4
+5
+6
+7
+8
+$ nodebrew ls
+v0.12.1
+ 
+current: none
+$ nodebrew use v0.12.1
+use v0.12.1
+$ node -v
+v0.12.1
+nodeモジュールの導入
+
+まず、PubNubのモジュールを導入する。次にRaspberry PiのGPIOを制御するためにonoffというモジュールを導入する。ひとまず扱いやすそうなのでこれを選択したが、他にもモジュールはあるので、利用しやすそうなものを選ぶとよい。
+
+1
+2
+npm install pubnub
+npm install onoff
+Raspberry Piのプログラミング
+
+PubNubからのデータをsubscribし、GPIOから出力するプログラムを記載する。PubNubの処理は簡単だし、onoffモジュールで簡単にGPIOも扱うことができる。事前にPubNubに登録して、Publish KeyとSubscribe Keyを取得しておく。登録は無料で、すぐに行える。
+
+main.js
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+var publishKey = '<Your PubNub Publish Key>';
+var subscribeKey = '<Your PubNub Subscribe Key>';
+ 
+var channel = "smart-led";  // use same channel name
+var ledPin = 14; // output pin
+ 
+// setup GPIO
+var OnOff = require('onoff');
+var Gpio = OnOff.Gpio;
+var led = new Gpio(ledPin, 'out');
+ 
+// setup PubNub
+var pubnub = require("pubnub")({
+    ssl           : true,
+    publish_key   : publishKey,
+    subscribe_key : subscribeKey
+});
+ 
+// register subscribe
+pubnub.subscribe({
+    channel  : channel,
+    callback : function(message) {
+        console.log('>', message);
+ 
+        if(message.action === 'on') {
+            // turn on
+            led.writeSync(1);
+        } else {
+            // turn off
+            led.writeSync(0);
+        }
+    }
+});
+プログラムは以下のコマンドで起動させる。
+
+1
+$ node main.js
+Raspberry Piの回路作成
+
+電子回路は、LEDと、LEDに電流が流れ過ぎないように取り付ける電気抵抗を、Raspberry Piにつなぐだけなのでいたってシンプルである。ピンは、Rasbperry Piのプログラムで出力として指定したものを使う。はんだ付けが不要で回路が作成できるブレッドボードを利用する。(図中ではModel B+となっているが、実際にはRaspberry Pi2を利用。ピン配置は同じ)
+circuit
+
+DSC_0517 (2)
+
+ブラウザ側の開発
+
+今回は、Webブラウザから操作する。JavaScriptを使うため、Node.jsを使ったRaspberry Pi側の実装とほぼ同じだ。PubNubのJavaScriptの解説ページを参考に実装する。
+
+ボタンを押したイベント内で、PubNubにpublishする。ソースコードはとても簡単だ。
+
+1
+2
+3
+4
+5
+6
+7
+8
+9
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+35
+36
+37
+38
+39
+40
+41
+42
+43
+44
+45
+46
+47
+48
+<html>
+<head>
+  <script src="http://cdn.pubnub.com/pubnub-3.7.1.min.js"></script>
+  <script src="https://code.jquery.com/jquery-2.1.3.min.js"></script>
+  <script>
+  $(function(){
+    var publishKey = '<Your PubNub Publish Key>';
+    var subscribeKey = '<Your PubNub Subscribe Key>';
+ 
+    // constant
+    var channel = "smart-led"; // use same channel name
+ 
+    // pubnub setup
+    var pubnub = PUBNUB.init({
+      publish_key   : publishKey,
+      subscribe_key : subscribeKey
+    });
+ 
+    // send data
+    function publish(action) {
+      var value = {'action': action}; // action must be on or off
+      pubnub.publish({
+        channel : channel,
+        message : value,
+        callback: function(message){
+          console.log(message);
+        }
+      });
+    }
+ 
+    // event when on button is clicked
+    $('#on-button').click(function(){
+      publish('on');
+    });
+ 
+    // event when off button is clicked
+    $('#off-button').click(function(){
+      publish('off');
+    });
+  });
+ 
+  </script>
+</head>
+<body>
+  <button id="on-button">ON</button>
+  <button id="off-button">OFF</button>
+</body>
+</html>
+上のHtmlをブラウザで開くと、「ON」と「OFF」ボタンが表示され、ONを押すと瞬時にLEDが点灯、OFFを押すと瞬時にLEDが消灯する。
+browser
+
+たったこれだけで、リアルタイムの通信を行うデバイスを作ることができた。
+インターネットにつながる環境さえあれば、世界のどこからでもLEDを制御できる。
+
+PubNubを使っているため、AndroidやiOSから操作するアプリも簡単に作ることができる。
+また、RaspberryPi側も、LEDを光らせる代わりにモーターを回したりするなどすれば、いろいろと応用ができ、可能性は無限大。
+まだまだIoTの第一歩だが、ここから応用していけば、いろいろなプロトタイプが作れるだろう。
+
+ソースコードはGitHubで公開している。
+
+btraxでは、IoTデバイスの市場調査、UX研究を目的に、IoTプロトタイプを開発している。現在進行しているのは、社内に取り付けられたミラーボールをインターネットに接続し、様々なツール（Google Apps連携、Slack連携など）から遠隔で操作するプロジェクト。また、開発の中で得られたノウハウは、freshtraxの中でも公開していく。直近では、Raspberry Piでのモーターの制御や、画像認識を予知絵している。
+
+将来的には、米国でクラウドファンディングを実施し、自社IoTデバイス開発を行うことも予定している。シリコンバレー、サンフランシスコで最先端のIoT事情を学びたいエンジニア、米国向けにIoTを開発し、プロダクト化を目指したいエンジニアを募集している。
+
+
+-----------------------------------------------
+Parse	終了
+https://parse.com
+Suin up for free
+Welcome to Pars > Embedded
+
+
+PubNub

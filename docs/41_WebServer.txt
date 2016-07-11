@@ -1,0 +1,78 @@
+Webサーバの設定
+
+>手順
+まずは本体のアップデートをしておきましょう。
+sudo apt-get update
+sudo apt-get upgrade
+
+以下のコマンドよりApache2をインストールします。
+sudo apt-get install apache2
+・Apache　インストール	sudo apt-get install apache2
+・PHP5　インストール		sudo apt-get install php5
+・MySQL　インストール	sudo apt-get install mysql-server
+
+・PHP関連追加インストール
+MySQL関連			　sudo apt-get install php5-mysql php5-curl
+GDです。画像を扱う場合必要です。	sudo apt-get install php5-gd
+
+liburi-perl・・・Perlで使用するライブラリ
+libjcode-pm-perl・・・Perlで使用するライブラリ
+libgraphics-magick-perl・・・画像処理
+
+インストールが終わったら、ラズベリーパイから以下にアクセスします。
+http://localhost
+
+または、ラズベリーパイ以外のデバイスからにアクセスします。
+http://192.168.179.12[ラズベリーパイのIPアドレス]
+ブラウザに"It works!" と表示されればラズベリーパイが無事にWebサーバになりました。
+
+---------------------------------------------------------------
+4.webサーバのルート
+　Apache2を用いたwebサーバのデフォルトのルートディレクトリは/var/www/です。
+/var/www/
+
+そのため、"http://localhost"または"http://[ラズパイIPアドレス]"にアクセスすると、/var/www/index.htmlの内容が表示されます。
+デフォルト設定のまま、新しく自分のページを作るときは、既存のindex.htmlをリネームし新しいページ名をindex.htmlとすればいいです。
+
+5.CGIファイル
+CGIファイルはデフォルトでは、以下のディレクトリに置くことになっています。
+/usr/lib/cgi-bin/
+　/usr/lib/cgi-bin/ にtest.cgiを作成します。
+
+[test.cgiの内容]
+#!bin/bash
+echo "Content-type:text/html"
+echo "Test!!"
+このtest.cgiを実行するには http://localhost/cgi-bin/test.cgi にアクセスすれば実行できます。
+実行すると、ブラウザに"Test!!"という文字が表示されるはずです。
+なおファイルの実行はルート権限でのみ可能なため、以下のコマンドより一般ユーザでも実行できるようにする必要があります。
+sudo chmod 755 /usr/lib/cgi-bin/ファイル名
+
+>設定ファイル
+設定ファイルは以下のディレクトリに存在します。ここでwebサーバのルートなどを変更することができます。
+/etc/apache2/apache2.conf
+
+6.起動・停止・再起動
+Apache2の起動	sudo /etc/init.d/apache2 start
+Apache2の停止	sudo /etc/init.d/apache2 stop
+Apache2の再起動	sudo /etc/init.d/apache2 restart
+
+自動起動の確認
+ラズベリーパイが起動した時にApache2が、自動で起動するようになっているかを確認します。
+デフォルトでは自動起動になっています。以下のコマンドを実行し、Apache2があれば自動起動されます。
+
+ls /etc/rc2.d/	apache2の自動起動確認
+自動起動の確認	
+自動起動の停止	sudo update-rc.d -f apache2 remove
+
+・現行自宅Webサーバからプログラムおよび、DBの移行
+・各種設定ファイル修正
+　Apacheの設定ファイルはこれ
+　/etc/apache2/apache2.conf
+
+　Apache再起動	sudo /etc/init.d/apache2 restart
+
+・パフォーマンスをあげるため、グラフィックに使用するメモリを減らす
+　sudo cp /boot/arm224_start.elf /boot/start.elf
+
+以上で、現行Webサーバと同じものが出来上がりました。

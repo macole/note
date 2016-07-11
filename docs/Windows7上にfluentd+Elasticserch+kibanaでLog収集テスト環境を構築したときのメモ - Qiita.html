@@ -1,0 +1,925 @@
+<!DOCTYPE html>
+<!-- saved from url=(0052)http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6 -->
+<html xmlns:og="http://ogp.me/ns#"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8"><title>Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita</title><meta content="width=device-width,initial-scale=1" name="viewport"><meta content="JenkinsのBuild情報を収集・解析するのにfluentd,Elasitcserach,kibanaでログ収集するPlatformのお試し環境を立ち上げたときのメモ。
+
+
+前提条件
+
+
+
+git for winsowsがインストールされていること。
+
+cURLがインストールされていること。(2016/05/22はアクセスタイムアウトしていた。)
+
+VirtualBoxがインストールされていること。(installしただけではだめでBIOSでVT-x/AMD-Vを有..." name="description"><meta content="summary" name="twitter:card"><meta content="@Qiita" name="twitter:site"><meta content="Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita" property="og:title"><meta content="article" property="og:type"><meta content="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6" property="og:url"><meta content="http://cdn.qiita.com/assets/qiita-fb-f1d6559f13f7e8de7260c6cec4d3b8f9c2eab8322a69fd786baea877d220278b.png" property="og:image"><meta content="JenkinsのBuild情報を収集・解析するのにfluentd,Elasitcserach,kibanaでログ収集するPlatformのお試し環境を立ち上げたときのメモ。
+
+# 前提条件
+- [git for winsows](ht..." property="og:description"><meta content="Qiita" property="og:site_name"><meta content="564524038" property="fb:admins"><link href="http://qiita.com/icons/favicons/public/production.ico?v=4" rel="shortcut icon" type="image/x-icon"><link href="http://qiita.com/opensearch.xml" rel="search" title="Qiita" type="application/opensearchdescription+xml"><link href="http://qiita.com/icons/favicons/public/apple-touch-icon.png" rel="apple-touch-icon"><link rel="stylesheet" media="all" href="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/application-11748708b1fa23fc6c764cb5085c1a0a6ccd43ce9f634b8d06a02a1ff8b98ebe.css"><meta name="csrf-param" content="authenticity_token">
+<meta name="csrf-token" content="Q5xpHQVdtydvSoLUqKHyQQD8BOhAR7drC+8boAtHX5FZxbv27oJOUQynKYaj1FQq5udPqXdehz7cX+tWx8dmNQ=="><script type="text/javascript" async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/pageviews"></script><script type="text/javascript" async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/segment"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/tdim-0.11.2.js"></script><script type="text/javascript" async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/gtm.js"></script><script type="text/javascript" async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/audience"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/itm.js"></script><script type="text/javascript" async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/conversion_async.js"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/gtm(1).js"></script><script src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/cb=gapi.loaded_1" async=""></script><script src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/cb=gapi.loaded_0" async=""></script><script type="text/javascript" charset="utf-8" async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/button.177407e7c9fd9de66268350cb0968e03.js"></script><style type="text/css">.fb_hidden{position:absolute;top:-10000px;z-index:10001}.fb_reposition{overflow:hidden;position:relative}.fb_invisible{display:none}.fb_reset{background:none;border:0;border-spacing:0;color:#000;cursor:auto;direction:ltr;font-family:"lucida grande", tahoma, verdana, arial, sans-serif;font-size:11px;font-style:normal;font-variant:normal;font-weight:normal;letter-spacing:normal;line-height:1;margin:0;overflow:visible;padding:0;text-align:left;text-decoration:none;text-indent:0;text-shadow:none;text-transform:none;visibility:visible;white-space:normal;word-spacing:normal}.fb_reset>div{overflow:hidden}.fb_link img{border:none}@keyframes fb_transform{from{opacity:0;transform:scale(.95)}to{opacity:1;transform:scale(1)}}.fb_animate{animation:fb_transform .3s forwards}
+.fb_dialog{background:rgba(82, 82, 82, .7);position:absolute;top:-10000px;z-index:10001}.fb_reset .fb_dialog_legacy{overflow:visible}.fb_dialog_advanced{padding:10px;-moz-border-radius:8px;-webkit-border-radius:8px;border-radius:8px}.fb_dialog_content{background:#fff;color:#333}.fb_dialog_close_icon{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 0 transparent;_background-image:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/yL/r/s816eWC-2sl.gif);cursor:pointer;display:block;height:15px;position:absolute;right:18px;top:17px;width:15px}.fb_dialog_mobile .fb_dialog_close_icon{top:5px;left:5px;right:auto}.fb_dialog_padding{background-color:transparent;position:absolute;width:1px;z-index:-1}.fb_dialog_close_icon:hover{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -15px transparent;_background-image:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/yL/r/s816eWC-2sl.gif)}.fb_dialog_close_icon:active{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/yq/r/IE9JII6Z1Ys.png) no-repeat scroll 0 -30px transparent;_background-image:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/yL/r/s816eWC-2sl.gif)}.fb_dialog_loader{background-color:#f6f7f9;border:1px solid #606060;font-size:24px;padding:20px}.fb_dialog_top_left,.fb_dialog_top_right,.fb_dialog_bottom_left,.fb_dialog_bottom_right{height:10px;width:10px;overflow:hidden;position:absolute}.fb_dialog_top_left{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/ye/r/8YeTNIlTZjm.png) no-repeat 0 0;left:-10px;top:-10px}.fb_dialog_top_right{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/ye/r/8YeTNIlTZjm.png) no-repeat 0 -10px;right:-10px;top:-10px}.fb_dialog_bottom_left{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/ye/r/8YeTNIlTZjm.png) no-repeat 0 -20px;bottom:-10px;left:-10px}.fb_dialog_bottom_right{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/ye/r/8YeTNIlTZjm.png) no-repeat 0 -30px;right:-10px;bottom:-10px}.fb_dialog_vert_left,.fb_dialog_vert_right,.fb_dialog_horiz_top,.fb_dialog_horiz_bottom{position:absolute;background:#525252;filter:alpha(opacity=70);opacity:.7}.fb_dialog_vert_left,.fb_dialog_vert_right{width:10px;height:100%}.fb_dialog_vert_left{margin-left:-10px}.fb_dialog_vert_right{right:0;margin-right:-10px}.fb_dialog_horiz_top,.fb_dialog_horiz_bottom{width:100%;height:10px}.fb_dialog_horiz_top{margin-top:-10px}.fb_dialog_horiz_bottom{bottom:0;margin-bottom:-10px}.fb_dialog_iframe{line-height:0}.fb_dialog_content .dialog_title{background:#6d84b4;border:1px solid #365899;color:#fff;font-size:14px;font-weight:bold;margin:0}.fb_dialog_content .dialog_title>span{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/yd/r/Cou7n-nqK52.gif) no-repeat 5px 50%;float:left;padding:5px 0 7px 26px}body.fb_hidden{-webkit-transform:none;height:100%;margin:0;overflow:visible;position:absolute;top:-10000px;left:0;width:100%}.fb_dialog.fb_dialog_mobile.loading{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/ya/r/3rhSv5V8j3o.gif) white no-repeat 50% 50%;min-height:100%;min-width:100%;overflow:hidden;position:absolute;top:0;z-index:10001}.fb_dialog.fb_dialog_mobile.loading.centered{width:auto;height:auto;min-height:initial;min-width:initial;background:none}.fb_dialog.fb_dialog_mobile.loading.centered #fb_dialog_loader_spinner{width:100%}.fb_dialog.fb_dialog_mobile.loading.centered .fb_dialog_content{background:none}.loading.centered #fb_dialog_loader_close{color:#fff;display:block;padding-top:20px;clear:both;font-size:18px}#fb-root #fb_dialog_ipad_overlay{background:rgba(0, 0, 0, .45);position:absolute;bottom:0;left:0;right:0;top:0;width:100%;min-height:100%;z-index:10000}#fb-root #fb_dialog_ipad_overlay.hidden{display:none}.fb_dialog.fb_dialog_mobile.loading iframe{visibility:hidden}.fb_dialog_content .dialog_header{-webkit-box-shadow:white 0 1px 1px -1px inset;background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#738ABA), to(#2C4987));border-bottom:1px solid;border-color:#1d4088;color:#fff;font:14px Helvetica, sans-serif;font-weight:bold;text-overflow:ellipsis;text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0;vertical-align:middle;white-space:nowrap}.fb_dialog_content .dialog_header table{-webkit-font-smoothing:subpixel-antialiased;height:43px;width:100%}.fb_dialog_content .dialog_header td.header_left{font-size:12px;padding-left:5px;vertical-align:middle;width:60px}.fb_dialog_content .dialog_header td.header_right{font-size:12px;padding-right:5px;vertical-align:middle;width:60px}.fb_dialog_content .touchable_button{background:-webkit-gradient(linear, 0% 0%, 0% 100%, from(#4966A6), color-stop(.5, #355492), to(#2A4887));border:1px solid #29487d;-webkit-background-clip:padding-box;-webkit-border-radius:3px;-webkit-box-shadow:rgba(0, 0, 0, .117188) 0 1px 1px inset, rgba(255, 255, 255, .167969) 0 1px 0;display:inline-block;margin-top:3px;max-width:85px;line-height:18px;padding:4px 12px;position:relative}.fb_dialog_content .dialog_header .touchable_button input{border:none;background:none;color:#fff;font:12px Helvetica, sans-serif;font-weight:bold;margin:2px -12px;padding:2px 6px 3px 6px;text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0}.fb_dialog_content .dialog_header .header_center{color:#fff;font-size:16px;font-weight:bold;line-height:18px;text-align:center;vertical-align:middle}.fb_dialog_content .dialog_content{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/y9/r/jKEcVPZFk-2.gif) no-repeat 50% 50%;border:1px solid #555;border-bottom:0;border-top:0;height:150px}.fb_dialog_content .dialog_footer{background:#f6f7f9;border:1px solid #555;border-top-color:#ccc;height:40px}#fb_dialog_loader_close{float:left}.fb_dialog.fb_dialog_mobile .fb_dialog_close_button{text-shadow:rgba(0, 30, 84, .296875) 0 -1px 0}.fb_dialog.fb_dialog_mobile .fb_dialog_close_icon{visibility:hidden}#fb_dialog_loader_spinner{animation:rotateSpinner 1.2s linear infinite;background-color:transparent;background-image:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/yD/r/t-wz8gw1xG1.png);background-repeat:no-repeat;background-position:50% 50%;height:24px;width:24px}@keyframes rotateSpinner{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
+.fb_iframe_widget{display:inline-block;position:relative}.fb_iframe_widget span{display:inline-block;position:relative;text-align:justify}.fb_iframe_widget iframe{position:absolute}.fb_iframe_widget_fluid_desktop,.fb_iframe_widget_fluid_desktop span,.fb_iframe_widget_fluid_desktop iframe{max-width:100%}.fb_iframe_widget_fluid_desktop iframe{min-width:220px;position:relative}.fb_iframe_widget_lift{z-index:1}.fb_hide_iframes iframe{position:relative;left:-10000px}.fb_iframe_widget_loader{position:relative;display:inline-block}.fb_iframe_widget_fluid{display:inline}.fb_iframe_widget_fluid span{width:100%}.fb_iframe_widget_loader iframe{min-height:32px;z-index:2;zoom:1}.fb_iframe_widget_loader .FB_Loader{background:url(https://fbstatic-a.akamaihd.net/rsrc.php/v2/y9/r/jKEcVPZFk-2.gif) no-repeat;height:32px;width:32px;margin-left:-16px;position:absolute;left:50%;z-index:4}</style></head><body class=" with-js"><noscript>&lt;iframe height="0" src="//www.googletagmanager.com/ns.html?id=GTM-TBQWPN" style="display:none;visibility:hidden" width="0"&gt;&lt;/iframe&gt;</noscript><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/gtm(2).js"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/analytics.js"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/52738645.js" id="optimizely-jssdk"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/ga.js" id="google-analytics-jssdk"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/widgets.js" id="twitter-jssdk"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/all.js" id="facebook-jssdk"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/plusone.js" id="google-plusone-jssdk" gapi_processed="true"></script><script async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/btn.js" id="pocket-btn-js"></script><script type="text/javascript" async="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/mixpanel-2.2.min.js"></script><script>
+  document.body.className = document.body.className.replace('without-js', '') + ' with-js';
+  window.Qiita = {"TLD":"com","controller_path":"public/items","controller_action":"public/items#show","controller":"items","action":"show","env":"production","flash":{},"is_landing_page":false,"is_team_page":false,"root_domain":"qiita.com","variant":null,"config":{"mixpanel":{"career":"dd35af27e959781713d63fd7ca898a8d","per_team":"c0a2116368b33b44b5029ebd2cc9b094","public":"be87616606b0e26a87689099aab2c4e5","team":"b7c0342acba2dbc8742484d98788efb3"},"default_locale":"ja","locale":"ja"},"team":null,"user":null,"GIT_BRANCH":null,"DEBUG":false};
+
+</script>
+<div class="headerContainer headerContainer-public" role="navigation"><div data-react-class="T.Header" data-react-props="{&quot;user&quot;:null,&quot;team&quot;:null,&quot;news&quot;:{&quot;type&quot;:&quot;Hot&quot;,&quot;content&quot;:&quot;Markdownによる情報共有サービス、Qiita:Team&quot;,&quot;url&quot;:&quot;https://teams.qiita.com?utm_source=qiita\u0026utm_medium=header_news&quot;},&quot;initial_unread_count&quot;:null,&quot;siteid_image&quot;:&quot;http://cdn.qiita.com/assets/siteid-reverse-04252f9a0a01f3a6d03eefefb2a30602e854bf7a4d237969a35600c1bbc3f783.png&quot;,&quot;is_team_page&quot;:false,&quot;on_team_setting&quot;:false,&quot;show_post_menu&quot;:true,&quot;show_search_menu&quot;:true,&quot;is_fluid&quot;:false,&quot;locale&quot;:&quot;ja&quot;}"><header class="sharedHeader sharedHeader-public" data-reactid=".0"><div class="sharedHeader_inner" data-reactid=".0.0"><div class="sharedHeader_left" data-reactid=".0.0.0"><span class="sharedHeader_logo open" data-reactid=".0.0.0.0"><a class="sharedHeader_logo_main" href="http://qiita.com/" data-reactid=".0.0.0.0.$logo"><img src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/siteid-reverse-04252f9a0a01f3a6d03eefefb2a30602e854bf7a4d237969a35600c1bbc3f783.png" width="74" height="26" data-reactid=".0.0.0.0.$logo.0"></a></span><form class="navbar-form navbar-left searchForm" action="http://qiita.com/search" method="get" data-reactid=".0.0.0.1"><div class="searchForm_queryWrapper" data-reactid=".0.0.0.1.0"><input class="form-control searchForm_query" placeholder="キーワードを入力" autocomplete="off" name="q" value="" data-reactid=".0.0.0.1.0.0"><div class="searchForm_wiseSearchButton" style="visibility:none;" data-reactid=".0.0.0.1.0.1"><i class="fa fa-caret-down" data-reactid=".0.0.0.1.0.1.0"></i></div></div></form><div class="navbar-text headerNews hidden-xs hidden-sm" data-reactid=".0.0.0.$navbar-text"><div class="headerNews_label label label-warning" data-reactid=".0.0.0.$navbar-text.$label">Hot</div><a class="navbar-link" target="_blank" href="https://teams.qiita.com/?utm_source=qiita&amp;utm_medium=header_news" data-reactid=".0.0.0.$navbar-text.$navbar-link">Markdownによる情報共有サービス、Qiita:Team</a></div></div><div class="sharedHeader_right" data-reactid=".0.0.1"><div class="sharedHeader_registerUser" data-reactid=".0.0.1.0"><a class="btn btn-warning navbar-btn navbar-right" href="http://qiita.com/signup?redirect_to=%2Fhiroomit%2Fitems%2F1faa9782c1b2c7212ad6" data-reactid=".0.0.1.0.0">ユーザ登録</a></div><div class="sharedHeader_loginUser" data-reactid=".0.0.1.1"><a data-label="LoginButtonAtNavbar" href="http://qiita.com/login?redirect_to=%2Fhiroomit%2Fitems%2F1faa9782c1b2c7212ad6" data-reactid=".0.0.1.1.0">ログイン</a></div></div></div></header></div></div><div id="main"><ol class="itemBreadcrumbs" itemscope="" itemtype="http://schema.org/BreadcrumbList"><li itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a itemprop="item" href="http://qiita.com/"><span itemprop="name">Qiita</span></a><meta content="1" itemprop="position"></li><li itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a itemprop="item" href="http://qiita.com/items"><span itemprop="name">投稿</span></a><meta content="2" itemprop="position"></li><li itemprop="itemListElement" itemscope="" itemtype="http://schema.org/ListItem"><a itemprop="item" href="http://qiita.com/tags/vagrant"><span itemprop="name">vagrant</span></a><meta content="3" itemprop="position"></li></ol><article itemscope="" itemtype="http://schema.org/Article"><div class="itemsShowHeader"><div class="container"><div class="row"><div class="col-sm-9"><h1 class="itemsShowHeaderTitle_title" itemprop="name">Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ</h1><ul class="list-unstyled list-inline itemsShowHeaderTags"><li class="itemsShowHeaderTags_list"><div class="tagIcon"><a class="tagIcon_base" href="http://qiita.com/tags/vagrant"><img alt="vagrant" class="tagIcon_img" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/medium.jpg"><div class="tagIcon_name">vagrant</div><div class="tagIcon_count">2086</div></a></div></li><li class="itemsShowHeaderTags_list"><div class="tagIcon"><a class="tagIcon_base" href="http://qiita.com/tags/docker"><img alt="docker" class="tagIcon_img" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/medium(1).jpg"><div class="tagIcon_name">docker</div><div class="tagIcon_count">2673</div></a></div></li><li class="itemsShowHeaderTags_list"><div class="tagIcon"><a class="tagIcon_base" href="http://qiita.com/tags/fluentd"><img alt="fluentd" class="tagIcon_img" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/medium(2).jpg"><div class="tagIcon_name">fluentd</div><div class="tagIcon_count">459</div></a></div></li><li class="itemsShowHeaderTags_list"><div class="tagIcon"><a class="tagIcon_base" href="http://qiita.com/tags/Elasticsearch"><img alt="Elasticsearch" class="tagIcon_img" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/medium(3).jpg"><div class="tagIcon_name">Elasticsearch</div><div class="tagIcon_count">477</div></a></div></li><li class="itemsShowHeaderTags_list"><div class="tagIcon"><a class="tagIcon_base" href="http://qiita.com/tags/kibana"><img alt="kibana" class="tagIcon_img" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/medium(4).jpg"><div class="tagIcon_name">kibana</div><div class="tagIcon_count">105</div></a></div></li></ul><ul class="list-unstyled list-inline itemsShowHeaderTitle_status"><li><a href="http://qiita.com/hiroomit"><img alt="" class="itemsShowHeaderTitle_authorIcon" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/17107278"></a><a href="http://qiita.com/hiroomit">hiroomit</a>が<time datetime="2016-05-28T15:30:21+09:00" itemprop="datePublished">2016/05/28</time>に投稿(<time datetime="2016-06-03T21:54:10+09:00" itemprop="dateModified">2016/06/03</time>に編集)</li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6/revisions">編集履歴(5)</a></li><li><a data-target=".js-report-form" data-toggle="modal" href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#">問題がある投稿を報告する</a></li></ul><div class="js-report-form modal fade reportForm"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button name="button" type="submit" class="close" data-dismiss="modal">×</button><h4 class="modal-title">問題がある投稿を報告する</h4></div><div class="modal-body"><form action="http://qiita.com/reports" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="✓"><input type="hidden" name="authenticity_token" value="Q5xpHQVdtydvSoLUqKHyQQD8BOhAR7drC+8boAtHX5FZxbv27oJOUQynKYaj1FQq5udPqXdehz7cX+tWx8dmNQ=="><input type="hidden" name="redirect_path" id="redirect_path" value="/hiroomit/items/1faa9782c1b2c7212ad6"><input type="hidden" name="item_uuid" id="item_uuid" value="1faa9782c1b2c7212ad6"><p>この投稿にどのような問題がありますか？</p><br><div class="form-group"><ul class="list-unstyled"><li><label><input type="radio" name="report_type" id="report_type_spam" value="spam" required="required"> スパムです </label></li><li><label><input type="radio" name="report_type" id="report_type_harassment" value="harassment" required="required"> 攻撃的または迷惑な内容を含んでいます </label></li><li><label><input type="radio" name="report_type" id="report_type_inappropriate_content" value="inappropriate_content" required="required"> 不適切な内容を含んでいます </label></li></ul></div><div class="reportForm_submitButtonContainer"><button name="button" type="submit" class="btn btn-primary reportForm_submitButton"><i class="fa fa-send"></i> 送信</button></div></form></div></div></div></div></div><div class="col-sm-3"><div class="itemsShowHeaderStock"><ul class="list-unstyled itemsShowHeaderStock_statusList"><li><div class="itemsShowHeaderStock_count stock"><i class="fa fa-stock"></i><span class="js-stocksCount">8</span></div><div class="itemsShowHeaderStock_countText">ストック</div></li><li><div class="itemsShowHeaderStock_count" content="0 UserComments" itemprop="interactionCount"><i class="fa fa-comment-o"></i>0</div><div class="itemsShowHeaderStock_countText">コメント</div></li></ul><span class="js-stockButton itemStockButton" data-counter=".js-stocksCount" data-path="/hiroomit/items/1faa9782c1b2c7212ad6" data-position="top" data-uuid="1faa9782c1b2c7212ad6"><form class="button_to" method="post" action="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6/stock"><button class="btn btn-default btn-block itemStockButton_button-stock" type="submit"><i class="fa fa-stock unstock hidden-sm"></i>ストック</button><input type="hidden" name="authenticity_token" value="Q5xpHQVdtydvSoLUqKHyQQD8BOhAR7drC+8boAtHX5FZxbv27oJOUQynKYaj1FQq5udPqXdehz7cX+tWx8dmNQ=="></form><div class="btn btn-primary btn-block itemStockButton_button-stocking">ストック済み</div><form class="button_to" method="post" action="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6/unstock"><button class="btn btn-danger btn-block itemStockButton_button-unstock" type="submit">解除</button><input type="hidden" name="authenticity_token" value="Q5xpHQVdtydvSoLUqKHyQQD8BOhAR7drC+8boAtHX5FZxbv27oJOUQynKYaj1FQq5udPqXdehz7cX+tWx8dmNQ=="></form></span></div><ul class="list-unstyled list-inline itemsShowHeaderStock_stockUsers"><li><a href="http://qiita.com/khiraiwa"><img alt="khiraiwa" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/4042790"></a></li><li><a href="http://qiita.com/twinbee"><img alt="twinbee" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/ee549b72ff35444d4b3b9e55830cb6fc"></a></li><li><a href="http://qiita.com/y_ussie"><img alt="y_ussie" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/25f54de7e49b17c45f4ec97df65a5965"></a></li><li><a href="http://qiita.com/getapojim"><img alt="getapojim" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/8f6e8d20b19758f1dba72735d0f796df"></a></li><li><a href="http://qiita.com/hiro8"><img alt="hiro8" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/85dcae836993d6e9d5257878592b4dd8"></a></li><li><a href="http://qiita.com/Suza"><img alt="Suza" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/SfIGRE05_normal.jpg"></a></li><li><a href="http://qiita.com/hiroomit"><img alt="hiroomit" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/17107278"></a></li><li><a href="http://qiita.com/Suzunari"><img alt="Suzunari" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/53292fafcee1138aac88f959a3d9e0e7"></a></li></ul></div></div></div></div><div class="container itemsShowBody"><div class="row scroll-chaser-wrapper" style="position: relative;"><div class="col-sm-9 itemsShowBody_articleColumn"><section class="markdownContent markdownContent-headingEnabled js-task-list-container clearfix position-relative" id="item-1faa9782c1b2c7212ad6" itemprop="articleBody"><p>JenkinsのBuild情報を収集・解析するのにfluentd,Elasitcserach,kibanaでログ収集するPlatformのお試し環境を立ち上げたときのメモ。</p>
+
+<h1>
+<span id="前提条件" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E5%89%8D%E6%8F%90%E6%9D%A1%E4%BB%B6"><i class="fa fa-link"></i></a>前提条件</h1>
+
+<ul>
+<li>
+<a href="https://git-for-windows.github.io/">git for winsows</a>がインストールされていること。</li>
+<li>
+<a href="http://curl.haxx.se/">cURL</a>がインストールされていること。(2016/05/22はアクセスタイムアウトしていた。)</li>
+<li>
+<a href="http://www.oracle.com/technetwork/server-storage/virtualbox/downloads/index.html?ssSourceSiteId=otnjp#vbox">VirtualBox</a>がインストールされていること。(installしただけではだめでBIOSでVT-x/AMD-Vを有効化しておくこと。)</li>
+<li>
+<a href="https://www.vagrantup.com/downloads.html">Vagrant</a>がインストールされていること。</li>
+</ul>
+
+<h1>
+<span id="環境" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E7%92%B0%E5%A2%83"><i class="fa fa-link"></i></a>環境</h1>
+
+<table>
+<thead>
+<tr>
+<th style="text-align: left">環境等</th>
+<th style="text-align: left">バージョン</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left">HostOS</td>
+<td style="text-align: left">Windows7 Home Premium Service Pack1</td>
+</tr>
+<tr>
+<td style="text-align: left">VirtualBox</td>
+<td style="text-align: left">4.3.26</td>
+</tr>
+<tr>
+<td style="text-align: left">GuestOS</td>
+<td style="text-align: left">Ubuntu 14.04</td>
+</tr>
+<tr>
+<td style="text-align: left">Vagrant</td>
+<td style="text-align: left">1.8.1</td>
+</tr>
+<tr>
+<td style="text-align: left">ubuntu</td>
+<td style="text-align: left">14.04</td>
+</tr>
+<tr>
+<td style="text-align: left">docker</td>
+<td style="text-align: left">1.10.3</td>
+</tr>
+<tr>
+<td style="text-align: left">fluentd</td>
+<td style="text-align: left">0.12.19</td>
+</tr>
+<tr>
+<td style="text-align: left">Elasticsearch</td>
+<td style="text-align: left">2.2.2</td>
+</tr>
+<tr>
+<td style="text-align: left">kibana</td>
+<td style="text-align: left">4.4.2</td>
+</tr>
+</tbody>
+</table>
+
+<h1>
+<span id="実際に構築した環境" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E5%AE%9F%E9%9A%9B%E3%81%AB%E6%A7%8B%E7%AF%89%E3%81%97%E3%81%9F%E7%92%B0%E5%A2%83"><i class="fa fa-link"></i></a>実際に構築した環境</h1>
+
+<p>fluentdのTCP/8888にログを投げて、kibanaのTCP/5601でブラウジングできる。<br>
+<a href="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/3af46069-e45e-3289-9347-93c2ac7efc8b.jpeg" target="_blank"><img src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/3af46069-e45e-3289-9347-93c2ac7efc8b.jpeg" alt="fluentd.jpg"></a></p>
+
+<h1>
+<span id="成果物" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E6%88%90%E6%9E%9C%E7%89%A9"><i class="fa fa-link"></i></a>成果物</h1>
+
+<p>GitHubからDownloadできる。<br>
+<a href="https://github.com/hiroomit/vagrant">https://github.com/hiroomit/vagrant</a></p>
+
+<h1>
+<span id="使い方" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E4%BD%BF%E3%81%84%E6%96%B9"><i class="fa fa-link"></i></a>使い方</h1>
+
+<p>1.Git Bashでconsole立ち上げて作業フォルダを作成する。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>mkdir -p vagrant/work
+<span class="nv">$ </span><span class="nb">cd </span>vagrant/work
+</pre></div></div>
+
+<p>2.GitHubからDownloadする。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>git clone https://github.com/hiroomit/vagrant
+</pre></div></div>
+
+<p>3.仮想環境を立ち上げる。<br>
+Virtualboxをproviderにしてvagrantの立ち上げる。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span><span class="nb">cd </span>vagrant/work
+<span class="nv">$ </span>./taniguchi_trusty64.sh start
+</pre></div></div>
+
+<p>4.fluentdログを飛ばす。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>curl -v -H <span class="s2">"Content-Type: application/json"</span> -XPOST http://localhost:8888/test -d @sample.txt
+</pre></div></div>
+
+<p>5.kibanaにアクセスする。<br>
+<a href="http://localhost:5601/">http://localhost:5601</a>にアクセスする。<br>
+logstash-*でDashboardを作成する。</p>
+
+<h1>
+<span id="作り方" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E4%BD%9C%E3%82%8A%E6%96%B9"><i class="fa fa-link"></i></a>作り方</h1>
+
+<h2>
+<span id="vagrantの準備" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%AE%E6%BA%96%E5%82%99"><i class="fa fa-link"></i></a>Vagrantの準備</h2>
+
+<h3>
+<span id="vagrantのpluginのinstall" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%AEplugin%E3%81%AEinstall"><i class="fa fa-link"></i></a>VagrantのPluginのInstall</h3>
+
+<p>Git Bash立ち上げて作業フォルダを作成</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>mkdir -p vagrant/work
+<span class="nv">$ </span><span class="nb">cd </span>vagrant/work
+</pre></div></div>
+
+<p>とりあえず下記いれてみた。まずはsaharaだけでもいれておく。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>vagrant plugin install sahara
+</pre></div></div>
+
+<p>あとは今後のお遊びのためのおまけ。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>vagrant plugin list
+docker-provider <span class="o">(</span>0.1.0<span class="o">)</span>
+sahara <span class="o">(</span>0.0.17<span class="o">)</span>
+vagrant-aws <span class="o">(</span>0.7.0<span class="o">)</span>
+vagrant-berkshelf <span class="o">(</span>4.1.0<span class="o">)</span>
+vagrant-lxc <span class="o">(</span>1.2.1<span class="o">)</span>
+vagrant-omnibus <span class="o">(</span>1.4.1<span class="o">)</span>
+vagrant-share <span class="o">(</span>1.1.5, system<span class="o">)</span>
+</pre></div></div>
+
+<h3>
+<span id="vagrantfileの編集" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrantfile%E3%81%AE%E7%B7%A8%E9%9B%86"><i class="fa fa-link"></i></a>Vagrantfileの編集</h3>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>vagrant init ubuntu/trusty64 
+</pre></div></div>
+
+<p>Vagrantファイルが生成されてるので設定を変更。<br>
+- config.vm.network: ipaddressをprivate networkの192.168.33.10の固定に設定。<br>
+- vb.gui: 最初はdebug用にvb.guiをtrueにして、動き始めたら#でコメントアウト。<br>
+- vb.memory: fluentd+Elasticsearch+kibanaの環境だとdefaultの1024MBでは足りず2048MBに増やした。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre>  <span class="c"># Create a private network, which allows host-only access to the machine</span>
+  <span class="c"># using a specific IP.</span>
+  config.vm.network <span class="s2">"private_network"</span>, ip: <span class="s2">"192.168.33.10"</span>
+
+  <span class="c"># Provider-specific configuration so you can fine-tune various</span>
+  <span class="c"># backing providers for Vagrant. These expose provider-specific options.</span>
+  <span class="c"># Example for VirtualBox:</span>
+  <span class="c">#</span>
+   config.vm.provider <span class="s2">"virtualbox"</span> <span class="k">do</span> <span class="p">|</span>vb<span class="p">|</span>
+     <span class="c"># Display the VirtualBox GUI when booting the machine</span>
+     vb.gui <span class="o">=</span> <span class="nb">true</span>
+
+     <span class="c"># Customize the amount of memory on the VM:</span>
+     vb.memory <span class="o">=</span> <span class="s2">"2048"</span>
+   end
+  <span class="c">#</span>
+  <span class="c"># View the documentation for the provider you are using for more</span>
+  <span class="c"># information on available options.</span>
+</pre></div></div>
+
+<h3>
+<span id="vagrantの起動" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%AE%E8%B5%B7%E5%8B%95"><i class="fa fa-link"></i></a>Vagrantの起動</h3>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>vagrant up --provider virtualbox
+</pre></div></div>
+
+<p>ここで起動せずにはまった。<br>
+デバイスマネージャーからVirtualBox Host-Only Ethernet Adapterを作成することで回避した記憶。</p>
+
+<blockquote>
+<p>関連リンク<br>
+<a href="http://www.makisima.org/v3/2010/11/12/virtualbox-err-host-only-network/">http://www.makisima.org/v3/2010/11/12/virtualbox-err-host-only-network/</a><br>
+Windows10系は別の話もあるっぽい。<br>
+<a href="http://d.hatena.ne.jp/kobarn/20150805">http://d.hatena.ne.jp/kobarn/20150805</a><br>
+<a href="https://www.virtualbox.org/ticket/14040">https://www.virtualbox.org/ticket/14040</a></p>
+</blockquote>
+
+<h3>
+<span id="vagrantでboxのカスタマイズ" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%A7box%E3%81%AE%E3%82%AB%E3%82%B9%E3%82%BF%E3%83%9E%E3%82%A4%E3%82%BA"><i class="fa fa-link"></i></a>Vagrantでboxのカスタマイズ</h3>
+
+<h4>
+<span id="docker-packageのinstall" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#docker-package%E3%81%AEinstall"><i class="fa fa-link"></i></a>docker packageのinstall</h4>
+
+<p>ここは本当はchefとか使いたいところだが勉強が必要なのでここではinstall shell scriptで対応。ついでテスト用にcurlのinstall, sshキーの設定、fluentdのログをdockerのホストとコンテナで共有できるようDirectoryを作成。</p>
+
+<blockquote>
+<p><a href="https://docs.docker.com/engine/installation/linux/ubuntulinux/">Installation on ubuntu</a></p>
+</blockquote>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>cat provision.sh
+<span class="c">#!/bin/sh</span>
+sudo apt-get update
+
+<span class="c"># install docker</span>
+sudo apt-get install -y apt-transport-https ca-certificates
+<span class="k">while</span> :
+<span class="k">do</span>
+    sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+    <span class="k">if</span> <span class="o">[</span> <span class="nv">$?</span> <span class="o">=</span> <span class="m">0</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+        <span class="nb">break</span><span class="p">;</span>
+    <span class="k">fi</span>
+<span class="k">done</span>
+
+sudo <span class="nb">echo</span> <span class="s2">"deb https://apt.dockerproject.org/repo ubuntu-trusty main"</span> &gt; /etc/apt/sources.list.d/docker.list
+sudo apt-get update
+sudo apt-get purge lxc-docker
+sudo apt-cache policy docker-engine
+sudo apt-get install -y linux-image-extra-<span class="k">$(</span>uname -r<span class="k">)</span>
+sudo apt-get install -y apparmor
+sudo apt-get install -y docker-engine
+sudo service docker start
+sudo usermod -aG docker vagrant
+
+<span class="c"># install curl</span>
+sudo apt-get install -y curl
+
+<span class="c"># install ssh-key</span>
+sudo -u vagrant ssh-keygen -t rsa -N <span class="s1">''</span> -f /home/vagrant/.ssh/id_rsa
+ssh-keygen -t rsa -N <span class="s1">''</span> -f ~/.ssh/id_rsa
+
+<span class="c"># prepare log for fluentd</span>
+mkdir -p /data
+chmod <span class="m">777</span> /data
+</pre></div></div>
+
+<h4>
+<span id="vagrantfileにprovision設定を追加" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrantfile%E3%81%ABprovision%E8%A8%AD%E5%AE%9A%E3%82%92%E8%BF%BD%E5%8A%A0"><i class="fa fa-link"></i></a>Vagrantfileにprovision設定を追加</h4>
+
+<p>やっていることは下記のこと。<br>
+- chefのinstall<br>
+- provision.shの実行でdocker等のinstall<br>
+- dockerのコンテナ起動</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre>  <span class="c"># Enable provisioning with a shell script. Additional provisioners such as</span>
+  <span class="c"># Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the</span>
+  <span class="c"># documentation for more information about their specific syntax and use.</span>
+  <span class="c"># config.vm.provision "shell", inline: &lt;&lt;-SHELL</span>
+  <span class="c">#   sudo apt-get update</span>
+  <span class="c">#   sudo apt-get install -y apache2</span>
+  <span class="c"># SHELL</span>
+  config.omnibus.chef_version<span class="o">=</span>:latest
+  config.vm.provision :shell, :path <span class="o">=</span>&gt;<span class="s2">"provision.sh"</span>
+  config.vm.provision <span class="s2">"docker"</span> <span class="k">do</span> <span class="p">|</span>d<span class="p">|</span>
+    d.run <span class="s2">"elasticsearch"</span>,
+      args: <span class="s2">"-p 9200:9200"</span>
+    d.run <span class="s2">"kibana"</span>,
+      args: <span class="s2">"-p 5601:5601 --link elasticsearch:elasticsearch"</span>
+    d.run <span class="s2">"hiroomi/fluentd"</span>,
+      args: <span class="s2">"-p 24224:24224 -p 8888:8888 -v /data:/fluentd/log -v /vagrant/data/fluentd/etc:/fluentd/etc"</span>
+  end
+</pre></div></div>
+
+<blockquote>
+<p>Vagrantfile等は下記の日本語サイトでお勉強した。<br>
+<a href="http://raqda.com/vagrant/index.html">Vagrant日本語ドキュメント</a></p>
+</blockquote>
+
+<h2>
+<span id="dockerイメージの準備" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#docker%E3%82%A4%E3%83%A1%E3%83%BC%E3%82%B8%E3%81%AE%E6%BA%96%E5%82%99"><i class="fa fa-link"></i></a>Dockerイメージの準備</h2>
+
+<p><a href="https://hub.docker.com/">Docker Hub</a>を利用する。<br>
+fluentdはElasticsearchのplugin入れるのでdockerイメージをcustomizeして作成。<br>
+Elasticsearch、kibanaは本家のイメージを流用した。</p>
+
+<h3>
+<span id="hiroomifluentd" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#hiroomifluentd"><i class="fa fa-link"></i></a><a href="https://hub.docker.com/r/hiroomi/fluentd/">hiroomi/fluentd</a>
+</h3>
+
+<p>official版<a href="https://hub.docker.com/r/fluent/fluentd/">fluent/fluentd</a>にelasticsearchのpluginをinstallしようとしたがgem installできず大はまりしてしまった。<br>
+GitHubとの連携でAutomated BuildのRepositoryをDocker Hub上に作成した。</p>
+
+<p><a href="https://github.com/fluent/fluentd-docker-image">ソース</a>からDockerfileを借用し<br>
+pluginをinstallしたうえでコンテナをBuildした。<br>
+<a href="https://github.com/hiroomit/fluentd">https://github.com/hiroomit/fluentd</a><br>
+の<a href="https://github.com/hiroomit/fluentd/blob/master/Dockerfile">Dockerfile</a>に下記コマンドを追加。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="c"># RUN gem install fluent-plugin-webhdfs</span>
+RUN gem install fluent-plugin-secure-forward --no-ri --no-rdoc
+RUN gem install fluent-plugin-elasticsearch --no-ri --no-rdoc
+</pre></div></div>
+
+<p>fluent.confの設定<br>
+httpからの入力をelasticsearchがいる192.168.33.10/9200に飛ばす設定。</p>
+
+<blockquote>
+<p><a href="http://docs.fluentd.org/articles/in_http">http Input Plugin</a><br>
+<a href="https://github.com/tagomoris/fluent-plugin-secure-forward/blob/master/README.md">fluent-plugin-secure-forward</a><br>
+<a href="https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.md">fluent-plugin-elasticsearch</a></p>
+</blockquote>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>cat data/fluentd/etc/fluentd.conf
+&lt;<span class="nb">source</span>&gt;
+  @type http
+  @id   input1
+  @label @mainstream
+  port  8888
+  <span class="nb">bind </span>0.0.0.0
+  body_size_limit 32m
+  keepalive_timeout 10s
+&lt;/source&gt;
+
+&lt;filter **&gt;
+  @type stdout
+&lt;/filter&gt;
+
+&lt;label @mainstream&gt;
+  &lt;match docker.**&gt;
+    @type file
+    @id   output_docker1
+    path         /fluentd/log/docker.*.log
+    symlink_path /fluentd/log/docker.log
+    append       <span class="nb">true</span>
+<span class="nb">    </span>time_slice_format %Y%m%d
+    time_slice_wait   1m
+    time_format       %Y%m%dT%H%M%S%z
+  &lt;/match&gt;
+  &lt;match **&gt;
+    @type elasticsearch
+    host 192.168.33.10
+    port 9200
+    index_name fluentd
+    type_name fluentd
+    logstash_format <span class="nb">true</span>
+<span class="nb">    </span>flush_interval 10s
+  &lt;/match&gt;
+&lt;/label&gt;
+</pre></div></div>
+
+<h3>
+<span id="elasticsearch" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#elasticsearch"><i class="fa fa-link"></i></a><a href="https://hub.docker.com/_/elasticsearch/">elasticsearch</a>
+</h3>
+
+<p>そのまま利用。</p>
+
+<h3>
+<span id="kibana" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#kibana"><i class="fa fa-link"></i></a><a href="https://hub.docker.com/_/kibana/">kibana</a>
+</h3>
+
+<p>そのまま利用。elasticsearchとlinkして起動させる。</p>
+
+<h2>
+<span id="vagrantでprovisioningを行う" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%A7provisioning%E3%82%92%E8%A1%8C%E3%81%86"><i class="fa fa-link"></i></a>Vagrantでprovisioningを行う。</h2>
+
+<p>失敗してもいいようにsaharaでsnapshotを作成しておく。</p>
+
+<div class="code-frame" data-lang="bash"><div class="highlight"><pre><span class="nv">$ </span>vagrant sandbox status
+<span class="nv">$ </span>vagrant sandobox on <span class="c"># offで無効化、commitでsnapshot更新、rollbackで巻き戻し</span>
+<span class="nv">$ </span>vagrant provision
+</pre></div></div>
+
+<p>これで一通り立ち上げできた。</p>
+
+<h1>
+<span id="このあとやりたいこと" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E3%81%93%E3%81%AE%E3%81%82%E3%81%A8%E3%82%84%E3%82%8A%E3%81%9F%E3%81%84%E3%81%93%E3%81%A8"><i class="fa fa-link"></i></a>このあとやりたいこと</h1>
+
+<ul>
+<li>実際にJenkinsからjsonのデータ飛ばしてログの収集、分析する。</li>
+<li>今回のテスト環境を<a href="https://azure.microsoft.com/ja-jp/">Azure</a>または<a href="https://aws.amazon.com/jp/">AWS</a>で本番稼働させる。</li>
+<li>provisionにshellでなくて<a href="https://www.chef.io/chef/">chef</a>や<a href="https://www.ansible.com/">Ansible</a>を使ってみる。</li>
+</ul>
+
+<h1>
+<span id="参考" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E5%8F%82%E8%80%83"><i class="fa fa-link"></i></a>参考</h1>
+
+<ul>
+<li><a href="http://gihyo.jp/book/2014/978-4-7741-6983-5">サーバ／インフラエンジニア養成読本 ログ収集〜可視化編</a></li>
+<li><a href="http://qiita.com/khiraiwa/items/dc7e1c446d7e0c7d9482" id="reference-8c7e20fa4711fdcb5abf">ELK(ElasticSearch, Logstash, Kibana)+fluentdの環境をDocker Composeで構築しつつ、試しにCloudWatchの統計データを収集してみた</a></li>
+<li><a href="http://qiita.com/bigwheel/items/6b15e71be84e3a731818" id="reference-78b055eb1af6a6dbbbd7">Vagrantのオススメ便利プラグイン</a></li>
+</ul>
+
+<h1>
+<span id="リンク" class="fragment"></span><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E3%83%AA%E3%83%B3%E3%82%AF"><i class="fa fa-link"></i></a>リンク</h1>
+
+<ul>
+<li><a href="https://git-for-windows.github.io/">git for winsows</a></li>
+<li><a href="http://curl.haxx.se/">cURL</a></li>
+<li><a href="http://www.oracle.com/technetwork/server-storage/virtualbox/downloads/index.html?ssSourceSiteId=otnjp#vbox">VirtualBox</a></li>
+<li><a href="https://github.com/">GitHub</a></li>
+<li><a href="https://www.vagrantup.com/">VAGRANT</a></li>
+<li><a href="https://www.docker.com/">docker</a></li>
+<li><a href="https://hub.docker.com/">Docker Hub</a></li>
+<li><a href="http://www.fluentd.org/">fluentd</a></li>
+<li><a href="https://www.elastic.co/products/elasticsearch/">Elasticsearch</a></li>
+<li><a href="https://www.elastic.co/jp/products/kibana/">kibana</a></li>
+</ul>
+<div class="hidden"><form class="js-task-list-update" action="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="✓"><input type="hidden" name="_method" value="patch"><input type="hidden" name="authenticity_token" value="Q5xpHQVdtydvSoLUqKHyQQD8BOhAR7drC+8boAtHX5FZxbv27oJOUQynKYaj1FQq5udPqXdehz7cX+tWx8dmNQ=="><input type="hidden" name="updated_at_confirmation_in_unixtime" id="updated_at_confirmation_in_unixtime" value="1464958450" class="js-task-list-updated-at"><textarea name="raw_body" id="raw_body" class="js-task-list-field">JenkinsのBuild情報を収集・解析するのにfluentd,Elasitcserach,kibanaでログ収集するPlatformのお試し環境を立ち上げたときのメモ。
+
+# 前提条件
+- [git for winsows](https://git-for-windows.github.io/)がインストールされていること。
+- [cURL](http://curl.haxx.se/)がインストールされていること。(2016/05/22はアクセスタイムアウトしていた。)
+- [VirtualBox](http://www.oracle.com/technetwork/server-storage/virtualbox/downloads/index.html?ssSourceSiteId=otnjp#vbox)がインストールされていること。(installしただけではだめでBIOSでVT-x/AMD-Vを有効化しておくこと。)
+- [Vagrant](https://www.vagrantup.com/downloads.html)がインストールされていること。
+
+# 環境
+|環境等|バージョン|
+|:----|:---|
+|HostOS| Windows7 Home Premium Service Pack1
+|VirtualBox| 4.3.26
+|GuestOS| Ubuntu 14.04
+|Vagrant| 1.8.1
+|ubuntu| 14.04
+|docker| 1.10.3
+|fluentd| 0.12.19|
+|Elasticsearch| 2.2.2|
+|kibana| 4.4.2
+
+# 実際に構築した環境
+fluentdのTCP/8888にログを投げて、kibanaのTCP/5601でブラウジングできる。
+![fluentd.jpg](https://qiita-image-store.s3.amazonaws.com/0/126580/3af46069-e45e-3289-9347-93c2ac7efc8b.jpeg)
+
+# 成果物
+GitHubからDownloadできる。
+[https://github.com/hiroomit/vagrant](https://github.com/hiroomit/vagrant)
+
+# 使い方
+1.Git Bashでconsole立ち上げて作業フォルダを作成する。
+
+```bash
+$ mkdir -p vagrant/work
+$ cd vagrant/work
+```
+
+2.GitHubからDownloadする。
+
+```bash
+$ git clone https://github.com/hiroomit/vagrant
+```
+3.仮想環境を立ち上げる。
+Virtualboxをproviderにしてvagrantの立ち上げる。
+
+```bash
+$ cd vagrant/work
+$ ./taniguchi_trusty64.sh start
+```
+4.fluentdログを飛ばす。
+
+```bash
+$ curl -v -H "Content-Type: application/json" -XPOST http://localhost:8888/test -d @sample.txt
+```
+5.kibanaにアクセスする。
+[http://localhost:5601](http://localhost:5601)にアクセスする。
+logstash-*でDashboardを作成する。
+
+# 作り方
+## Vagrantの準備
+### VagrantのPluginのInstall
+Git Bash立ち上げて作業フォルダを作成
+
+```bash
+$ mkdir -p vagrant/work
+$ cd vagrant/work
+```
+
+とりあえず下記いれてみた。まずはsaharaだけでもいれておく。
+
+```bash
+$ vagrant plugin install sahara
+```
+あとは今後のお遊びのためのおまけ。
+
+```bash
+$ vagrant plugin list
+docker-provider (0.1.0)
+sahara (0.0.17)
+vagrant-aws (0.7.0)
+vagrant-berkshelf (4.1.0)
+vagrant-lxc (1.2.1)
+vagrant-omnibus (1.4.1)
+vagrant-share (1.1.5, system)
+```
+
+### Vagrantfileの編集
+
+```bash
+$ vagrant init ubuntu/trusty64 
+```
+Vagrantファイルが生成されてるので設定を変更。
+- config.vm.network: ipaddressをprivate networkの192.168.33.10の固定に設定。
+- vb.gui: 最初はdebug用にvb.guiをtrueにして、動き始めたら#でコメントアウト。
+- vb.memory: fluentd+Elasticsearch+kibanaの環境だとdefaultの1024MBでは足りず2048MBに増やした。
+  
+```bash
+  # Create a private network, which allows host-only access to the machine
+  # using a specific IP.
+  config.vm.network "private_network", ip: "192.168.33.10"
+
+  # Provider-specific configuration so you can fine-tune various
+  # backing providers for Vagrant. These expose provider-specific options.
+  # Example for VirtualBox:
+  #
+   config.vm.provider "virtualbox" do |vb|
+     # Display the VirtualBox GUI when booting the machine
+     vb.gui = true
+  
+     # Customize the amount of memory on the VM:
+     vb.memory = "2048"
+   end
+  #
+  # View the documentation for the provider you are using for more
+  # information on available options.
+```
+### Vagrantの起動
+
+```bash
+$ vagrant up --provider virtualbox
+```
+ここで起動せずにはまった。
+デバイスマネージャーからVirtualBox Host-Only Ethernet Adapterを作成することで回避した記憶。
+&gt; 関連リンク
+&gt; [http://www.makisima.org/v3/2010/11/12/virtualbox-err-host-only-network/](http://www.makisima.org/v3/2010/11/12/virtualbox-err-host-only-network/)
+&gt; Windows10系は別の話もあるっぽい。
+&gt; [http://d.hatena.ne.jp/kobarn/20150805](http://d.hatena.ne.jp/kobarn/20150805)
+[https://www.virtualbox.org/ticket/14040](https://www.virtualbox.org/ticket/14040)
+
+### Vagrantでboxのカスタマイズ
+#### docker packageのinstall
+ここは本当はchefとか使いたいところだが勉強が必要なのでここではinstall shell scriptで対応。ついでテスト用にcurlのinstall, sshキーの設定、fluentdのログをdockerのホストとコンテナで共有できるようDirectoryを作成。
+&gt; [Installation on ubuntu](https://docs.docker.com/engine/installation/linux/ubuntulinux/)
+
+```bash
+$ cat provision.sh
+#!/bin/sh
+sudo apt-get update
+
+# install docker
+sudo apt-get install -y apt-transport-https ca-certificates
+while :
+do
+    sudo apt-key adv --keyserver hkp://p80.pool.sks-keyservers.net:80 --recv-keys 58118E89F3A912897C070ADBF76221572C52609D
+    if [ $? = 0 ]; then
+        break;
+    fi
+done
+
+sudo echo "deb https://apt.dockerproject.org/repo ubuntu-trusty main" &gt; /etc/apt/sources.list.d/docker.list
+sudo apt-get update
+sudo apt-get purge lxc-docker
+sudo apt-cache policy docker-engine
+sudo apt-get install -y linux-image-extra-$(uname -r)
+sudo apt-get install -y apparmor
+sudo apt-get install -y docker-engine
+sudo service docker start
+sudo usermod -aG docker vagrant
+
+# install curl
+sudo apt-get install -y curl
+
+# install ssh-key
+sudo -u vagrant ssh-keygen -t rsa -N '' -f /home/vagrant/.ssh/id_rsa
+ssh-keygen -t rsa -N '' -f ~/.ssh/id_rsa
+
+# prepare log for fluentd
+mkdir -p /data
+chmod 777 /data
+```
+#### Vagrantfileにprovision設定を追加
+やっていることは下記のこと。
+- chefのinstall
+- provision.shの実行でdocker等のinstall
+- dockerのコンテナ起動
+
+```bash
+  # Enable provisioning with a shell script. Additional provisioners such as
+  # Puppet, Chef, Ansible, Salt, and Docker are also available. Please see the
+  # documentation for more information about their specific syntax and use.
+  # config.vm.provision "shell", inline: &lt;&lt;-SHELL
+  #   sudo apt-get update
+  #   sudo apt-get install -y apache2
+  # SHELL
+  config.omnibus.chef_version=:latest
+  config.vm.provision :shell, :path =&gt;"provision.sh"
+  config.vm.provision "docker" do |d|
+    d.run "elasticsearch",
+      args: "-p 9200:9200"
+    d.run "kibana",
+      args: "-p 5601:5601 --link elasticsearch:elasticsearch"
+    d.run "hiroomi/fluentd",
+      args: "-p 24224:24224 -p 8888:8888 -v /data:/fluentd/log -v /vagrant/data/fluentd/etc:/fluentd/etc"
+  end
+```
+&gt; Vagrantfile等は下記の日本語サイトでお勉強した。
+&gt; [Vagrant日本語ドキュメント](http://raqda.com/vagrant/index.html)
+
+## Dockerイメージの準備
+[Docker Hub](https://hub.docker.com/)を利用する。
+fluentdはElasticsearchのplugin入れるのでdockerイメージをcustomizeして作成。
+Elasticsearch、kibanaは本家のイメージを流用した。
+
+### [hiroomi/fluentd](https://hub.docker.com/r/hiroomi/fluentd/)
+official版[fluent/fluentd](https://hub.docker.com/r/fluent/fluentd/)にelasticsearchのpluginをinstallしようとしたがgem installできず大はまりしてしまった。
+GitHubとの連携でAutomated BuildのRepositoryをDocker Hub上に作成した。
+
+[ソース](https://github.com/fluent/fluentd-docker-image)からDockerfileを借用し
+pluginをinstallしたうえでコンテナをBuildした。
+[https://github.com/hiroomit/fluentd](https://github.com/hiroomit/fluentd)
+の[Dockerfile](https://github.com/hiroomit/fluentd/blob/master/Dockerfile)に下記コマンドを追加。
+
+```bash
+# RUN gem install fluent-plugin-webhdfs
+RUN gem install fluent-plugin-secure-forward --no-ri --no-rdoc
+RUN gem install fluent-plugin-elasticsearch --no-ri --no-rdoc
+```
+
+fluent.confの設定
+httpからの入力をelasticsearchがいる192.168.33.10/9200に飛ばす設定。
+&gt; [http Input Plugin](http://docs.fluentd.org/articles/in_http)
+&gt; [fluent-plugin-secure-forward](https://github.com/tagomoris/fluent-plugin-secure-forward/blob/master/README.md)
+&gt; [fluent-plugin-elasticsearch](https://github.com/uken/fluent-plugin-elasticsearch/blob/master/README.md)
+
+```bash
+$ cat data/fluentd/etc/fluentd.conf
+&lt;source&gt;
+  @type http
+  @id   input1
+  @label @mainstream
+  port  8888
+  bind 0.0.0.0
+  body_size_limit 32m
+  keepalive_timeout 10s
+&lt;/source&gt;
+
+&lt;filter **&gt;
+  @type stdout
+&lt;/filter&gt;
+
+&lt;label @mainstream&gt;
+  &lt;match docker.**&gt;
+    @type file
+    @id   output_docker1
+    path         /fluentd/log/docker.*.log
+    symlink_path /fluentd/log/docker.log
+    append       true
+    time_slice_format %Y%m%d
+    time_slice_wait   1m
+    time_format       %Y%m%dT%H%M%S%z
+  &lt;/match&gt;
+  &lt;match **&gt;
+    @type elasticsearch
+    host 192.168.33.10
+    port 9200
+    index_name fluentd
+    type_name fluentd
+    logstash_format true
+    flush_interval 10s
+  &lt;/match&gt;
+&lt;/label&gt;
+```
+
+### [elasticsearch](https://hub.docker.com/_/elasticsearch/)
+そのまま利用。
+### [kibana](https://hub.docker.com/_/kibana/)
+そのまま利用。elasticsearchとlinkして起動させる。
+
+## Vagrantでprovisioningを行う。
+失敗してもいいようにsaharaでsnapshotを作成しておく。
+
+```bash
+$ vagrant sandbox status
+$ vagrant sandobox on # offで無効化、commitでsnapshot更新、rollbackで巻き戻し
+$ vagrant provision
+```
+これで一通り立ち上げできた。
+
+# このあとやりたいこと
+- 実際にJenkinsからjsonのデータ飛ばしてログの収集、分析する。
+- 今回のテスト環境を[Azure](https://azure.microsoft.com/ja-jp/)または[AWS](https://aws.amazon.com/jp/)で本番稼働させる。
+- provisionにshellでなくて[chef](https://www.chef.io/chef/)や[Ansible](https://www.ansible.com/)を使ってみる。
+
+# 参考
+- [サーバ／インフラエンジニア養成読本 ログ収集〜可視化編](http://gihyo.jp/book/2014/978-4-7741-6983-5)
+- [ELK(ElasticSearch, Logstash, Kibana)+fluentdの環境をDocker Composeで構築しつつ、試しにCloudWatchの統計データを収集してみた](http://qiita.com/khiraiwa/items/dc7e1c446d7e0c7d9482)
+- [Vagrantのオススメ便利プラグイン](http://qiita.com/bigwheel/items/6b15e71be84e3a731818)
+
+# リンク
+- [git for winsows](https://git-for-windows.github.io/)
+- [cURL](http://curl.haxx.se/)
+- [VirtualBox](http://www.oracle.com/technetwork/server-storage/virtualbox/downloads/index.html?ssSourceSiteId=otnjp#vbox)
+- [GitHub](https://github.com)
+- [VAGRANT](https://www.vagrantup.com/)
+- [docker](https://www.docker.com/)
+- [Docker Hub](https://hub.docker.com/)
+- [fluentd](http://www.fluentd.org/)
+- [Elasticsearch](https://www.elastic.co/products/elasticsearch/)
+- [kibana](https://www.elastic.co/jp/products/kibana/)
+
+</textarea><input type="submit" name="commit" value="Save changes"></form></div></section><div class="itemsShowBody_articleColumnFooter"><a class="btn btn-sm btn-primary itemsShowBody_articleColumnFooter_request" href="http://qiita.com/drafts/1faa9782c1b2c7212ad6/edit"><i class="fa fa-send-o"></i> 編集リクエストを送る</a><span class="itemsShowBody_articleColumnFooter_requestDescription">投稿者に記事をより良くするための提案ができます 💪</span><div class="socialButtons"><div class="socialButtons_twitter"><iframe id="twitter-widget-0" scrolling="no" frameborder="0" allowtransparency="true" class="twitter-share-button twitter-share-button-rendered twitter-tweet-button" title="Twitter Tweet Button" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/tweet_button.6e778523ecf0a9c9f1c446083d86ede1.en.html" style="position: static; visibility: visible; width: 60px; height: 20px;" data-url="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6"></iframe></div><div class="socialButtons_hatebu"><iframe class="hatena-bookmark-button-frame" title="はてブに追加" frameborder="0" scrolling="no" width="70" height="20" src="javascript:false" style="width: 46px; height: 20px;" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/saved_resource.html"></iframe><script async="async" charset="utf-8" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/bookmark_button.js" type="text/javascript"></script></div><div class="socialButtons_googlePlus"><div id="___plusone_0" style="text-indent: 0px; margin: 0px; padding: 0px; border-style: none; float: none; line-height: normal; font-size: 1px; vertical-align: baseline; display: inline-block; width: 90px; height: 20px; background: transparent;"><iframe frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" style="position: static; top: 0px; width: 90px; margin: 0px; border-style: none; left: 0px; visibility: visible; height: 20px;" tabindex="0" vspace="0" width="100%" id="I0_1465817169818" name="I0_1465817169818" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/fastbutton.html" data-gapiattached="true" title="+1"></iframe></div></div><div class="socialButtons_facebook"><div class="fb-like fb_iframe_widget" data-action="like" data-href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6" data-layout="button_count" data-share="false" data-show-faces="false" fb-xfbml-state="rendered" fb-iframe-plugin-query="action=like&amp;app_id=222621691108322&amp;container_width=0&amp;href=http%3A%2F%2Fqiita.com%2Fhiroomit%2Fitems%2F1faa9782c1b2c7212ad6&amp;layout=button_count&amp;locale=en_US&amp;sdk=joey&amp;share=false&amp;show_faces=false"><span style="vertical-align: bottom; width: 78px; height: 20px;"><iframe name="f18467190992d24" width="1000px" height="1000px" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" title="fb:like Facebook Social Plugin" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/like.html" style="border: none; visibility: visible; width: 78px; height: 20px;" class=""></iframe></span></div></div><div class="socialButtons_pocket"><div class="pocket-btn"><iframe width="135" height="22" id="pocket-button-0" frameborder="0" allowtransparency="true" scrolling="NO" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/button.html"></iframe></div></div></div><script>window.addEventListener("DOMContentLoaded", function() {
+  // Web Intents Javascript Events : https://dev.twitter.com/docs/intents/events#waiting-for-asynchronous-resources
+  twttr.ready(function (twttr) {
+    twttr.events.bind('tweet', function(event) {
+      if (event) {
+        ga('send', 'social', 'twitter', 'tweet', 'http://qiita.com');
+        $.ajax({
+          type: 'POST',
+          url: '/notifications',
+          data: {
+            notification: {
+              verb: 'tweet',
+              uuid: "1faa9782c1b2c7212ad6"
+            }
+          }
+        });
+      }
+    });
+    twttr.events.bind('click', function (e) {
+      if (e) {
+        ga('send', 'social', 'twitter', 'click', 'http://qiita.com');
+      }
+    });
+  });
+});</script><div class="text-advertisement"><span class="label label-info">PR</span> <a target="_blank" id="ad-48" href="https://teams.qiita.com/?utm_content=48&amp;utm_medium=text&amp;utm_source=qiita">社内メールでの情報共有をなくそう - Qiita:Team</a></div><script>window.addEventListener("DOMContentLoaded", function() {
+  'use strict';
+  QiitaAnalysis.showAdvertisement({ adId: 48 })
+  $('#ad-48').click(function() {
+    QiitaAnalysis.clickAdvertisement({
+      type:  'text',
+      place: 'bottom',
+      adId:  48
+    })
+  });
+});</script></div><div class="itemsShowComment"><div class="itemsShowComment_wrapper" id="comments"><div class="js-comments"></div><div class="itemsShowCommentSignupOrLogin"><div class="itemsShowCommentSignupOrLogin_title">あなたもコメントしてみませんか :)</div><a class="btn btn-primary" track="click" data-label="RegisterToComment" href="http://qiita.com/signup?redirect_to=%2Fhiroomit%2Fitems%2F1faa9782c1b2c7212ad6%23comments">ユーザー登録(無料)</a><div class="itemsShowCommentSignupOrLogin_sub">すでにアカウントを持っている方は<a href="http://qiita.com/login?redirect_to=%2Fhiroomit%2Fitems%2F1faa9782c1b2c7212ad6%23comments">ログイン</a></div></div></div></div></div><div class="col-sm-3 itemsShowBody_subColumn"><div class="socialButtons"><div class="socialButtons_twitter"><iframe id="twitter-widget-1" scrolling="no" frameborder="0" allowtransparency="true" class="twitter-share-button twitter-share-button-rendered twitter-tweet-button" title="Twitter Tweet Button" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/tweet_button.6e778523ecf0a9c9f1c446083d86ede1.en(1).html" style="position: static; visibility: visible; width: 60px; height: 20px;" data-url="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6"></iframe></div><div class="socialButtons_hatebu"><iframe class="hatena-bookmark-button-frame" title="はてブに追加" frameborder="0" scrolling="no" width="70" height="20" src="javascript:false" style="width: 46px; height: 20px;" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/saved_resource(1).html"></iframe><script async="async" charset="utf-8" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/bookmark_button.js" type="text/javascript"></script></div><div class="socialButtons_googlePlus"><div id="___plusone_1" style="text-indent: 0px; margin: 0px; padding: 0px; border-style: none; float: none; line-height: normal; font-size: 1px; vertical-align: baseline; display: inline-block; width: 90px; height: 20px; background: transparent;"><iframe frameborder="0" hspace="0" marginheight="0" marginwidth="0" scrolling="no" style="position: static; top: 0px; width: 90px; margin: 0px; border-style: none; left: 0px; visibility: visible; height: 20px;" tabindex="0" vspace="0" width="100%" id="I1_1465817169836" name="I1_1465817169836" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/fastbutton(1).html" data-gapiattached="true" title="+1"></iframe></div></div><div class="socialButtons_facebook"><div class="fb-like fb_iframe_widget" data-action="like" data-href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6" data-layout="button_count" data-share="false" data-show-faces="false" fb-xfbml-state="rendered" fb-iframe-plugin-query="action=like&amp;app_id=222621691108322&amp;container_width=0&amp;href=http%3A%2F%2Fqiita.com%2Fhiroomit%2Fitems%2F1faa9782c1b2c7212ad6&amp;layout=button_count&amp;locale=en_US&amp;sdk=joey&amp;share=false&amp;show_faces=false"><span style="vertical-align: bottom; width: 78px; height: 20px;"><iframe name="f3bf627fbbdf1bc" width="1000px" height="1000px" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" title="fb:like Facebook Social Plugin" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/like(1).html" style="border: none; visibility: visible; width: 78px; height: 20px;" class=""></iframe></span></div></div><div class="socialButtons_pocket"><div class="pocket-btn"><iframe width="135" height="22" id="pocket-button-1" frameborder="0" allowtransparency="true" scrolling="NO" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/button(1).html"></iframe></div></div></div><script>window.addEventListener("DOMContentLoaded", function() {
+  // Web Intents Javascript Events : https://dev.twitter.com/docs/intents/events#waiting-for-asynchronous-resources
+  twttr.ready(function (twttr) {
+    twttr.events.bind('tweet', function(event) {
+      if (event) {
+        ga('send', 'social', 'twitter', 'tweet', 'http://qiita.com');
+        $.ajax({
+          type: 'POST',
+          url: '/notifications',
+          data: {
+            notification: {
+              verb: 'tweet',
+              uuid: "1faa9782c1b2c7212ad6"
+            }
+          }
+        });
+      }
+    });
+    twttr.events.bind('click', function (e) {
+      if (e) {
+        ga('send', 'social', 'twitter', 'click', 'http://qiita.com');
+      }
+    });
+  });
+});</script><section class="itemsShowAuthorInfo" itemprop="author" itemscope="" itemtype="http://schema.org/Person"><a href="http://qiita.com/hiroomit"><img alt="" class="itemsShowAuthorInfo_userIcon" itemprop="image" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/17107278"></a><div class="itemsShowAuthorInfo_profileStats"><strong class="itemsShowAuthorInfo_userName" itemprop="name"><a itemprop="url" href="http://qiita.com/hiroomit">hiroomit</a></strong><div class="itemsShowAuthorInfo_contribution"><span class="itemsShowAuthorInfo_count">8</span><span class="itemsShowAuthorInfo_unit">Contribution</span></div><span class="js-userFollowButton userFollowButton" data-position="author-info" data-url-name="hiroomit"><form class="button_to" method="post" action="http://qiita.com/hiroomit/follow"><button class="btn btn-default btn-block userFollowButton_button-follow btn-xs" type="submit"><i class="fa fa-user-plus"></i>フォロー</button><input type="hidden" name="authenticity_token" value="Q5xpHQVdtydvSoLUqKHyQQD8BOhAR7drC+8boAtHX5FZxbv27oJOUQynKYaj1FQq5udPqXdehz7cX+tWx8dmNQ=="></form><div class="btn btn-primary btn-block userFollowButton_button-following btn-xs">フォロー中</div><form class="button_to" method="post" action="http://qiita.com/hiroomit/unfollow"><button class="btn btn-danger btn-block userFollowButton_button-unfollow btn-xs" type="submit">解除</button><input type="hidden" name="authenticity_token" value="Q5xpHQVdtydvSoLUqKHyQQD8BOhAR7drC+8boAtHX5FZxbv27oJOUQynKYaj1FQq5udPqXdehz7cX+tWx8dmNQ=="></form></span></div><section class="itemsShowAuthorPopularItems"><h5 class="itemsShowAuthorPopularItems_sectionTitle">人気の投稿</h5><ul class="itemsShowAuthorPopularItems_posts list-unstyled"><li itemscope="" itemtype="http://schema.org/Article"> <a itemprop="url" track="click" data-label="AuthorPopularItemsAtSidebar" href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6">Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ</a></li></ul></section></section><div style="position: relative; top: 0px; height: 0px;"></div><div class="scroll-chaser" style="width: 270px; position: relative; top: 0px;"><div class="ad_frame_right_banner_1"><div class="bigmining_zone_16"><div id="" style="width:100%;max-width:270px;height:248px;position:relative;border:solid 3px #00AA00;overflow:hidden;margin:0;padding:0;outline:none;font-size:75%;font-family:&#39;Helvetica Neue&#39;,Helvetica,&#39;ヒラギノ角ゴ ProN W3&#39;,&#39;Hiragino Kaku Gothic ProN&#39;,&#39;メイリオ&#39;,Meiryo,sans-serif;color:#2d2d2d;letter-spacing:0;">
+<a target="_blank" href="http://dg-ads-adserver.bigmining.com/www/delivery/ck.php?oaparams=2__bannerid=44__zoneid=16__source=_cat%28vagrant%29_cat%28docker%29_cat%28fluentd%29_cat%28Elasticsearch%29_cat%28kibana%29__OXLCA=1__cb=95565721e4__oadest=https%3A%2F%2Fcodeiq.jp%2Fq%2F2809%2F%3Fkme%3Dclicked_qiitaprime%26km_display%3Dall_visitor_Quiz%0A%0A" style="color:#2d2d2d;text-decoration:none;margin:0;padding:0;outline:none;">
+<div class="bm_ad_text" onmouseout="this.style.backgroundColor=&#39;#fff&#39;" onmouseover="this.style.backgroundColor=&#39;#e0eed0&#39;" style="width:100%;height:64px;margin:0;overflow:hidden;padding:0;outline:none;border-bottom: solid;border-width: 1px;border-color: #00AA00;">
+<div style="width:100%px;margin:6px 0 0;float:right;overflow:hidden;padding:0;outline: none;">
+<span style="display:inline;line-height:1em;font-weight:700;margin:0px 0px 0px 10px;padding:0;outline:none;font-size: 13px;">
+<!-- 会社名 / 年収 -->Rubyが使える人にはやさしいクイズ
+</span>
+<!-- -->
+<div style="width:100%;margin:0;overflow:hidden;margin:0;padding:0;outline:none;">
+<div style="width:70%;float:left;margin:0;padding:0;outline:none;">
+<p id="bm_ad_subtitle" style="font-size:100%;line-height:1.2em;margin:3px 0px 0px 8px;padding:0;outline:none;">
+<!-- 募集職種 -->分数の計算をプログラミングしてみよう！正解するとMMDモデルをプレゼント。
+<!-- -->
+</p>
+</div>
+<div style="width:22%;height:22px;margin:9px 6px 6px 0;padding:5px 0 0;text-align:center;background:#41b224;border-radius:2px;-webkit-border-radius:2px;-moz-border-radius:2px;float:right;font-size:83%;line-height:1.2em;font-weight:700;color:#fff;utline: none;">詳細</div>
+</div>
+</div>
+</div>
+</a>
+<!-- B -- ↓↓ URL -->
+<a target="_blank" href="http://dg-ads-adserver.bigmining.com/www/delivery/ck.php?oaparams=2__bannerid=44__zoneid=16__source=_cat%28vagrant%29_cat%28docker%29_cat%28fluentd%29_cat%28Elasticsearch%29_cat%28kibana%29__OXLCA=1__cb=95565721e4__oadest=https%3A%2F%2Fcodeiq.jp%2Fq%2F1678%2F%3Fkme%3Dclicked_qiitaprime%26km_display%3Dall_visitor_Quiz%0A%0A" style="color:#2d2d2d;text-decoration:none;margin:0;padding:0;outline:none;">
+<div class="bm_ad_text" onmouseout="this.style.backgroundColor=&#39;#fff&#39;" onmouseover="this.style.backgroundColor=&#39;#e0eed0&#39;" style="width:100%;height:64px;margin:0;overflow:hidden;padding:0;outline:none;border-bottom: solid;border-width: 1px;border-color: #00AA00;">
+<div style="width:100%px;margin:6px 0 0;float:right;overflow:hidden;padding:0;outline: none;">
+<span style="display:inline;line-height:1em;font-weight:700;margin:0px 0px 0px 10px;padding:0;outline:none;font-size: 13px;">
+<!-- 会社名 / 年収 -->Scalaで解けたら一人前！？
+</span>
+<div style="width:100%;margin:0;overflow:hidden;margin:0;padding:0;outline:none;">
+<div style="width:70%;float:left;margin:0;padding:0;outline:none;">
+<p id="bm_ad_subtitle" style="font-size:100%;line-height:1.2em;margin:3px 0px 0px 8px;padding:0;outline:none;">
+<!-- 募集職種 -->10進数と2進数の変換を練習してみよう。どの言語でチャレンジしてもOK♪
+<!-- -->
+</p>
+</div>
+<div style="width:22%;height:22px;margin:9px 6px 6px 0;padding:5px 0 0;text-align:center;background:#41b224;border-radius:2px;-webkit-border-radius:2px;-moz-border-radius:2px;float:right;font-size:83%;line-height:1.2em;font-weight:700;color:#fff;utline: none;">詳細</div>
+</div>
+</div>
+</div>
+</a>
+<!-- C -- ↓↓ URL -->
+<a id="bm_ad_text_sub" target="_blank" href="http://dg-ads-adserver.bigmining.com/www/delivery/ck.php?oaparams=2__bannerid=44__zoneid=16__source=_cat%28vagrant%29_cat%28docker%29_cat%28fluentd%29_cat%28Elasticsearch%29_cat%28kibana%29__OXLCA=1__cb=95565721e4__oadest=https%3A%2F%2Fcodeiq.jp%2Fq%2F1617%2F%3Fkme%3Dclicked_qiitaprime%26km_display%3Dall_visitor_Quiz%0A%0A" style="color:#2d2d2d;text-decoration:none;margin:0;padding:0;outline:none;">
+<div onmouseout="this.style.backgroundColor=&#39;#fff&#39;" onmouseover="this.style.backgroundColor=&#39;#e0eed0&#39;" style="width:100%;height:64px;margin:0;overflow:hidden;padding:0;outline:none;border-bottom: solid;border-width: 1px;border-color: #00AA00;">
+<div style="width:100%px;margin:6px 0 0;float:right;overflow:hidden;padding:0;outline: none;">
+<span style="display:inline;line-height:1em;font-weight:700;margin:0px 0px 0px 10px;padding:0;outline:none;font-size: 13px;">
+<!-- 会社名 / 年収 -->Git入門クイズ！
+<!-- -->
+</span>
+<div style="width:100%;margin:0;overflow:hidden;margin:0;padding:0;outline:none;">
+<div style="width:70%;float:left;margin:0;padding:0;outline:none;">
+<p id="bm_ad_subtitle" style="font-size:100%;line-height:1.2em;margin:3px 0px 0px 8px;padding:0;outline:none;">
+<!-- 募集職種 -->あなたは「Git」を使いこなせていますか？選択問題でチェックしてみよう
+<!-- -->
+</p>
+</div>
+<div style="width:22%;height:22px;margin:9px 6px 6px 0;padding:5px 0 0;text-align:center;background:#41b224;border-radius:2px;-webkit-border-radius:2px;-moz-border-radius:2px;float:right;font-size:83%;line-height:1.2em;font-weight:700;color:#fff;utline: none;">詳細</div>
+</div>
+</div>
+</div>
+</a>
+<div style="height:50px;width:100%;max-width:270px;">
+<div style="width:43%;float: left;">
+<img src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/codeiq.png" width="298" height="43" style="border:none;">
+</div>
+<div id="bm_ad_category" style="margin-top: 20px; float: left; width: 55%; max-width: 150px; text-align: right;">
+<span style="width:100%; font-size:10px;background-color:orange; color:#ffffff; padding:3px 10px 3px 10px; -webkit-border-radius:30px 2px 30px 2px / 30px 2px 30px 2px;border-radius:30px 2px 30px 2px / 30px 2px 30px 2px;">
+<!-- カテゴリ情報 -->[PR]プログラミング問題
+<!-- -->
+</span>
+</div>
+</div>
+</div><div id="beacon_95565721e4" style="position: absolute; left: 0px; top: 0px; visibility: hidden;"><img src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/lg.php" width="0" height="0" alt="" style="width: 0px; height: 0px;"></div>
+</div></div><script async="" charset="UTF-8" defer="" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/adjs_set_pro.js" type="text/javascript"></script><div class="tocTree"><div class="tocTree_contents js-tocTreeContents" style="max-height: 645px;"><ul class="nav"><li class=""><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E5%89%8D%E6%8F%90%E6%9D%A1%E4%BB%B6" track="click" data-label="TOC">
+前提条件</a></li><li class="active"><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E7%92%B0%E5%A2%83" track="click" data-label="TOC">
+環境</a></li><li class=""><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E5%AE%9F%E9%9A%9B%E3%81%AB%E6%A7%8B%E7%AF%89%E3%81%97%E3%81%9F%E7%92%B0%E5%A2%83" track="click" data-label="TOC">
+実際に構築した環境</a></li><li class=""><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E6%88%90%E6%9E%9C%E7%89%A9" track="click" data-label="TOC">
+成果物</a></li><li class=""><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E4%BD%BF%E3%81%84%E6%96%B9" track="click" data-label="TOC">
+使い方</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E4%BD%9C%E3%82%8A%E6%96%B9" track="click" data-label="TOC">
+作り方</a><ul class="nav"><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%AE%E6%BA%96%E5%82%99" track="click" data-label="TOC">
+Vagrantの準備</a><ul class="nav"><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%AEplugin%E3%81%AEinstall" track="click" data-label="TOC">
+VagrantのPluginのInstall</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrantfile%E3%81%AE%E7%B7%A8%E9%9B%86" track="click" data-label="TOC">
+Vagrantfileの編集</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%AE%E8%B5%B7%E5%8B%95" track="click" data-label="TOC">
+Vagrantの起動</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%A7box%E3%81%AE%E3%82%AB%E3%82%B9%E3%82%BF%E3%83%9E%E3%82%A4%E3%82%BA" track="click" data-label="TOC">
+Vagrantでboxのカスタマイズ</a><ul class="nav"><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#docker-package%E3%81%AEinstall" track="click" data-label="TOC">
+docker packageのinstall</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrantfile%E3%81%ABprovision%E8%A8%AD%E5%AE%9A%E3%82%92%E8%BF%BD%E5%8A%A0" track="click" data-label="TOC">
+Vagrantfileにprovision設定を追加</a></li></ul></li></ul></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#docker%E3%82%A4%E3%83%A1%E3%83%BC%E3%82%B8%E3%81%AE%E6%BA%96%E5%82%99" track="click" data-label="TOC">
+Dockerイメージの準備</a><ul class="nav"><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#hiroomifluentd" track="click" data-label="TOC">
+hiroomi/fluentd
+</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#elasticsearch" track="click" data-label="TOC">
+elasticsearch
+</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#kibana" track="click" data-label="TOC">
+kibana
+</a></li></ul></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#vagrant%E3%81%A7provisioning%E3%82%92%E8%A1%8C%E3%81%86" track="click" data-label="TOC">
+Vagrantでprovisioningを行う。</a></li></ul></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E3%81%93%E3%81%AE%E3%81%82%E3%81%A8%E3%82%84%E3%82%8A%E3%81%9F%E3%81%84%E3%81%93%E3%81%A8" track="click" data-label="TOC">
+このあとやりたいこと</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E5%8F%82%E8%80%83" track="click" data-label="TOC">
+参考</a></li><li><a href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6#%E3%83%AA%E3%83%B3%E3%82%AF" track="click" data-label="TOC">
+リンク</a></li></ul></div></div><div class="js-tocAnchor"></div></div></div></div></div></article><script id="js-item" type="application/json">{ "url": "http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6", "id": 395887, "uuid": "1faa9782c1b2c7212ad6" }</script><script class="js-user" type="application/json">{&quot;id&quot;:126580,&quot;url_name&quot;:&quot;hiroomit&quot;,&quot;profile_image_url&quot;:&quot;https://avatars.githubusercontent.com/u/17107278?v=3&quot;}</script><script language="JavaScript" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/qiita_bigmining.js" type="text/javascript"></script></div><script src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/adrequest.js"></script><footer class="footer"><div class="footer_inner"><div class="footer_container"><ul class="footer_links-left"><li class="footer_link"><a class="footer_copyright" href="http://increments.co.jp/">© 2016 Increments Inc.</a></li><li class="footer_link"><a href="http://qiita.com/terms">利用規約</a></li><li class="footer_link"><a href="http://qiita.com/privacy">プライバシー</a></li><li class="footer_link"><a href="http://help.qiita.com/">ヘルプ</a></li><li class="footer_link"><a href="https://increments.zendesk.com/anonymous_requests/new">お問い合わせ</a></li></ul><ul class="footer_links-right"><li class="footer_link"><a href="http://qiita.com/about">Qiitaとは</a></li><li class="footer_link"><a href="http://blog.qiita.com/">ブログ</a></li><li class="footer_link"><a href="http://qiita.com/api/v2/docs">API</a></li><li class="footer_link"><a href="https://teams.qiita.com/">Team</a></li><li class="footer_link"><a href="http://kobito.qiita.com/">Kobito</a></li><li class="footer_link"><a href="http://career.qiita.com/">Career</a></li><li class="footer_link"><a class="js-public-form-feedback-link" data-target=".js-feedback-form" data-toggle="modal" href="http://qiita.com/hiroomit/items/1faa9782c1b2c7212ad6"><i class="fa fa-heart"></i> ご意見 <i class="fa fa-caret-down"></i></a></li></ul></div></div></footer><div class="js-feedback-form modal fade feedbackForm"><div class="modal-dialog"><div class="modal-content"><div class="modal-header"><button name="button" type="submit" class="close" data-dismiss="modal">×</button><h4 class="modal-title">ご意見</h4></div><div class="modal-body"><form class="js-feedback-form-form" action="http://qiita.com/feedbacks" accept-charset="UTF-8" method="post"><input name="utf8" type="hidden" value="✓"><input type="hidden" name="authenticity_token" value="Q5xpHQVdtydvSoLUqKHyQQD8BOhAR7drC+8boAtHX5FZxbv27oJOUQynKYaj1FQq5udPqXdehz7cX+tWx8dmNQ=="><input type="hidden" name="redirect_path" id="redirect_path" value="/hiroomit/items/1faa9782c1b2c7212ad6"><div class="form-group"><textarea name="feedback[message]" id="feedback_message" class="form-control js-feedback-form-text-area" placeholder="Qiitaについてのご意見をお聞かせください。" required="required" rows="5"></textarea></div><div class="feedbackForm_submitButtonContainer"><button name="button" type="submit" class="btn btn-primary feedbackForm_submitButton"><i class="fa fa-send"></i> 送信</button><p class="feedbackForm_note">いただいたご意見への返信は行っておりません。<br>返信の必要な内容については、<a href="https://increments.zendesk.com/anonymous_requests/new">こちら</a> からお問い合わせください。</p></div><div style="position:fixed;top:-99999px;opacity:0.0001;"><input name="feedback[name]" type="text"></div></form></div></div></div></div><script>if (window.mixpanel instanceof Element) {
+  window.mixpanel = [];
+}
+(function(f,b){if(!b.__SV){var a,e,i,g;window.mixpanel=b;b._i=[];b.init=function(a,e,d){function f(b,h){var a=h.split(".");2==a.length&&(b=b[a[0]],h=a[1]);b[h]=function(){b.push([h].concat(Array.prototype.slice.call(arguments,0)))}}var c=b;"undefined"!==typeof d?c=b[d]=[]:d="mixpanel";c.people=c.people||[];c.toString=function(b){var a="mixpanel";"mixpanel"!==d&&(a+="."+d);b||(a+=" (stub)");return a};c.people.toString=function(){return c.toString(1)+".people (stub)"};i="disable track track_pageview track_links track_forms register register_once alias unregister identify name_tag set_config people.set people.set_once people.increment people.append people.track_charge people.clear_charges people.delete_user".split(" ");
+for(g=0;g<i.length;g++)f(c,i[g]);b._i.push([a,e,d])};b.__SV=1.2;a=f.createElement("script");a.type="text/javascript";a.async=!0;a.src="//cdn.mxpnl.com/libs/mixpanel-2.2.min.js";e=f.getElementsByTagName("script")[0];e.parentNode.insertBefore(a,e)}})(document,window.mixpanel||[]);</script><script src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/application-b3b91a0e666dd43000e0d0607872bf28e1664558a5f6cdcac92a858b01e98468.js"></script><div id="fb-root" class=" fb_reset"><div style="position: absolute; top: -10000px; height: 0px; width: 0px;"><div><iframe name="fb_xdm_frame_http" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" id="fb_xdm_frame_http" aria-hidden="true" title="Facebook Cross Domain Communication Frame" tabindex="-1" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/xd_arbiter.html" style="border: none;"></iframe><iframe name="fb_xdm_frame_https" frameborder="0" allowtransparency="true" allowfullscreen="true" scrolling="no" id="fb_xdm_frame_https" aria-hidden="true" title="Facebook Cross Domain Communication Frame" tabindex="-1" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/xd_arbiter(1).html" style="border: none;"></iframe></div></div><div style="position: absolute; top: -10000px; height: 0px; width: 0px;"><div></div></div></div><script>
+  (function () {
+    var script = document.getElementsByTagName('script')[0];
+    var load = function (src, id) {
+      var el = document.createElement('script');
+      el.async = true;
+      el.src = src;
+      el.id = id;
+      script.parentNode.insertBefore(el, script);
+    };
+      // Optimizely
+      load('//cdn.optimizely.com/js/52738645.js', 'optimizely-jssdk');
+      // Google Analytics
+      window._gaq = window._gaq || [];
+      var isCareer = location.hostname.split('.')[0] == 'career';
+      if (isCareer) {
+        window._gaq.push(['_setAccount', 'UA-24675221-11']);
+        window._gaq.push(['_setDomainName', 'qiita.com']);
+      } else {
+        window._gaq.push(['_setAccount', 'UA-24675221-1']);
+      }
+      window._gaq.push(['_setCustomVar', 1, 'logged_in', 'false', 2]);
+      window._gaq.push(['_trackPageview']);
+      var src = ('https:' == document.location.protocol ? 'https://ssl' : 'http://www') + '.google-analytics.com/ga.js';
+      load(src, 'google-analytics-jssdk');
+    // Google Analytics - Universal Analytics
+    (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
+    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
+    m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
+    })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
+        ga('create', 'UA-24675221-12', {
+          
+        });
+        ga('set', 'dimension1', 'false');
+        ga('set', 'dimension3', 'false');
+      ga('require', 'displayfeatures');
+      ga('set', 'forceSSL', true);
+      ga('send', 'pageview');
+    // Google Tag Manager
+      (function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+      new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+      j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+      '//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+      })(window,document,'script','dataLayer','GTM-TBQWPN');
+  })();
+</script>
+<img src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/adevent" width="0" height="0" style="display: none;"><iframe name="oauth2relay888845408" id="oauth2relay888845408" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/postmessageRelay.html" tabindex="-1" style="width: 1px; height: 1px; position: absolute; top: -100px;"></iframe><img src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/dmp" width="1" height="1" border="0" style="display: none;"><script>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src='//www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);})(window,document,'script','dataLayer','GTM-58Z82M');</script><div style="display: none; visibility: hidden;"><script type="text/javascript">(function(b,a,c){b=a.getElementsByTagName(c)[0];a=a.createElement(c);a.async=!0;a.src="//dmp.im-apps.net/js/6638/0001/itm.js";b.parentNode.insertBefore(a,b)})(window,document,"script");</script></div><div style="display: none; visibility: hidden;"><iframe src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/activityi.html" width="1" height="1" frameborder="0" style="display:none"></iframe></div><div style="display: none; visibility: hidden;"><iframe src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/activityi(1).html" width="1" height="1" frameborder="0" style="display:none"></iframe></div><script type="text/javascript" id="">!function(c,d,b,f){if(!d[c]){d[c]=function(){d[c].instances.push(this);this.init&&this.init()};d[c].instances=[];for(var a=0,e=["td_send","td_send_imid"];a<e.length;a++)d[c].prototype[e[a]]=function(a){return function(){this["tmp_"+a]=this["tmp_"+a]||[];this["tmp_"+a].push(Array.prototype.slice.call(arguments))}}(e[a]);a=b.getElementsByTagName(f)[0];b=b.createElement(f);b.async=!0;b.src="//cf.im-apps.net/sdk/tdim-0.11.2.js";a.parentNode.insertBefore(b,a)}}("TDIM",window,document,"script");var t=new TDIM;
+t.td_api_key="4633/44ab22321675f37f93c94f1c53265720999626e1";t.td_db="6638";t.im_api_token="omO0CDJd98sxiIkb8Mzm7Q";t.gtm_dl="dataLayer";t.td_send_imid("pageviews",{qiita_search_categories:google_tag_manager["GTM-5SNCW4"].macro('gtm1465817174936')});</script><script type="text/javascript" id="">(function(a){var b=a.createElement("iframe"),c="https:"==a.location.protocol?"https://":"http://";b.src=c+"cf.im-apps.net/imid/beacon.html";b.style.display="none";a.body.appendChild(b)})(document);</script><iframe src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/beacon.html" style="display: none;"></iframe><iframe id="rufous-sandbox" scrolling="no" frameborder="0" allowtransparency="true" allowfullscreen="true" style="position: absolute; visibility: hidden; display: none; width: 0px; height: 0px; padding: 0px; border: none;" src="./Windows7上にfluentd+Elasticserch+kibanaでLog収集テスト環境を構築したときのメモ - Qiita_files/saved_resource(2).html"></iframe></body></html>

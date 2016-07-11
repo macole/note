@@ -1,0 +1,21 @@
+>ラズベリーパイの性能
+価格	発売日	ROM	RAM	CPU
+source: raspberry-pi.ksyic.com
+
+35ドル	64bitのARM Cortex-53クアッドコア	1	10倍
+
+
+Raspberry Pi Model B
+Raspberry Pi 2 Model B
+32bitのARM Cortex-A7 クアッドコア900MHz	6倍
+Raspberry Pi 3
+64bitのARM Cortex-A53クアッドコア1.2GHz	9倍
+
+Raspberry PiファウンデーションのCEO Uben CPUコア変更の主な目的は、32bitモードでのパフォーマンスを向上させること。クロック数の向上とアーキテクチャ上の改良により、新CPUコアは32bitモードで走らせても従来モデルより 50～60%速く、初代のRaspberry Pi比では最大10倍高速になった。各種ソフトウェアやツールセットの64bitモード移行は「今後数か月にわたって意義を評価する」。
+実世界アプリケーションで初代Raspberry Piと比較した速度はシングルスレッドで2.5倍
+NEONを使うビデオコーデックで20倍以上。グラフィック部分は従来モデルから引き継いだVideoCore IVサブシステムが400MHz、3Dコアが300MHz動作します。
+SoC/CPUは歴代同様BroadCom社製、ただし今回はコアが64bit化された「BCM2837」を採用。
+クアッドコアで最大クロックは1.2GHzと、前モデルのBCM2836（4コア/900MHz）を大きく上回り、パフォーマンスは約50%アップしている。
+ただし、メモリ容量は前モデルと同じ1GB、3D性能がやや向上したもののGPU性能はほぼ同水準。
+Raspberry Pi 3の演算性能向上はBroadcom製の新SoC BCM2837
+

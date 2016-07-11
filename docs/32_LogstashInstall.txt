@@ -1,0 +1,42 @@
+Installing Logstashedit
+========================================
+### Note
+LogstashはJava7以上が必要です。オラクルから提供されているものや、OpenJDKのようなオープンソース提供のものを使ってください。
+
+まずはJavaのバージョンをチェックしてください
+java -version
+
+### Installing from a Downloaded Binaryedit
+
+Download the Logstash installation file that matches your host environment. Unpack the file. Do not install Logstash into a directory path that contains colon (:) characters.
+
+### Installing from Package Repositoriesedit
+
+Download and install the Public Signing Key:
+
+wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+
+Add the repository definition to your /etc/apt/sources.list file:
+
+echo "deb https://packages.elastic.co/logstash/2.3/debian stable main" | sudo tee -a /etc/apt/sources.list
+
+Run sudo apt-get update and the repository is ready for use. You can install it with:
+
+sudo apt-get update && sudo apt-get install logstash
+YUMedit
+Download and install the public signing key:
+
+rpm --import https://packages.elastic.co/GPG-KEY-elasticsearch
+
+
+Add the following in your /etc/yum.repos.d/ directory in a file with a .repo suffix, for example logstash.repo
+
+[logstash-2.3]
+name=Logstash repository for 2.3.x packages
+baseurl=https://packages.elastic.co/logstash/2.3/centos
+gpgcheck=1
+gpgkey=https://packages.elastic.co/GPG-KEY-elasticsearch
+enabled=1
+And your repository is ready for use. You can install it with:
+
+yum install logstash

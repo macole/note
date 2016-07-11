@@ -26,7 +26,7 @@ sudo raspi-config
 
 ---------------------------------------------------
 Python
-・Dualshock操作
+・Dualshockコントローラ操作
 ・GPIO操作
 
 NodeJS
@@ -39,7 +39,61 @@ Shell
 ・音声合成
 ・Tweet
 
-NodeJSからコマンド実行
+---------------------------------------------------
+>コマンドとテキスト
+入力するコマンドやテキストのうち、長いコマンドやテキストをこちらに掲載しています。
+長くて入力するのが大変…という場合は、以下よりコピー＆ペーストで入力していただいても結構です。
+
+＜TIPS＞
+コマンドやファイルのパスを途中まで入力してESCキー（もしくはTABキー）を2回押すと候補が表示されます。
+候補が1つだけの場合は自動的に入力されるので、長いコマンドやファイル名を入力する際に便利です。
+
+3-4 P.71 Raspberry Pi を日本語化しよう
+sudo apt-get install ttf-kochi-gothic xfonts-intl-japanese xfonts-intl-japanese-big xfonts-kaname
+sudo apt-get install uim uim-anthy
+sudo apt-get install jfbterm
+
+
+4-3 P.101 Open JTalkのインストールと設定
+sudo apt-get install open-jtalk open-jtalk-mecab-naist-jdic hts-voice-nitech-jp-atr503-m001 libhtsengine1
+
+
+5-8 P.134 MJPG-Streamerのダウンロード
+sudo apt-get install subversion libjpeg-dev imagemagick
+svn co https://svn.code.sf.net/p/mjpg-streamer/code/mjpg-streamer mjpg-streamer
+
+
+5-3 P.135 MJPG-Streamerのシェルスクリプト(1)
+LD_LIBRARY_PATH=/usr/local/lib mjpg_streamer -i "input_uvc.so -f 10 -r 320x240 -d /dev/video0 -y" -o "output_http.so -w /usr/local/www -p 8080 -c test:1234"
+
+
+5-3 P.135 MJPG-Streamerのシェルスクリプト(2)
+#!/bin/sh
+PORT="8080"
+ID="test"
+PW="1234"
+SIZE="320x240"
+FRAMERATE="10"
+
+export LD_LIBRARY_PATH=/usr/local/lib
+mjpg_streamer \
+-i "input_uvc.so -f $FRAMERATE -r $SIZE -d /dev/video0 -y" \
+-o "output_http.so -w /usr/local/www -p $PORT -c $ID:$PW"
+
+
+5-3 P.140 Ustreamのシェルスクリプト(1)
+#!/bin/sh
+SIZE="352x288" # 動画のサイズ
+FRAMERATE="30" # フレームレート
+RTMP_URL="rtmp://x.xxxxxxxx.fme.ustream.tv/ustreamVideo/xxxxxxxx"
+STREAM_KEY="xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+
+avconv -r $FRAMERATE -s $SIZE \
+-f video4linux2 -i /dev/video0 \
+-f flv "$RTMP_URL/$STREAM_KEY flashver=FME/3.0\20(compatible;\20FMSc/1.0)"
+
+---------------------------------------------------
+>NodeJSからコマンド実行
 https://nodejs.org/api/child_process.html
 
 var exec = require('child_process').exec;
@@ -47,8 +101,7 @@ exec('ls -la ./', function(err, stdout, stderr){
   if (err) { console.log(err); } 
 });
 
-shellHelper.js を使用すれば複数行のシェルコマンドも簡単に実行できます。
-
+>shellHelper.js を使用すれば複数行のシェルコマンドも簡単に実行できます。
 var shell = require('./shellHelper');
 shell.series([
   'cd ../',
@@ -59,13 +112,11 @@ shell.series([
   }
 });
 
-基本的にパッケージはアプリケーションごとにインストールするものだと覚えておけば良い。
-アプリケーション用にインストールする場合:
-
-npm install <パッケージ名>
-グローバルにインストールする場合:
-
-npm install -g <パッケージ名>
+--------------------------------------------------
+Pythonパッケージのインストール
+パッケージはアプリケーションごとにインストールするものだと覚えておけば良い。
+アプリケーション用にインストールする場合:	npm install <パッケージ名>
+グローバルにインストールする場合:		npm install -g <パッケージ名>
 
 ------------------------------------------------------------------
 外部プログラムの起動
@@ -75,7 +126,7 @@ pythonで外部のシェルスクリプトやコマンドを実行する方法
 os.system('ls -la')	コマンドが成功すれば0が返ってきます。
 commands.getoutput("ls -la")	実際に実行した結果が返ってきます。
 
-subprocess
+>subprocess
 この中のsubprocess.check_outputを使います。
 使い方としては、引数に文字列を入れるわけですが、二通りあって、まず、デフォルトで使う場合には、
 check_output(["cut", "-d", "test.txt"])
@@ -91,8 +142,8 @@ Unix で shell=True の場合: args が文字列の場合、シェルを介し�
 args が文字列の場合には最初の要素はコマンド名を表わす文字列としてそして残りの要素は続く引数としてシェルに渡されます。
 これは、以下の Popen と等価ということです。
 
-簡単なサンプル
-
+------------------------------------------------------------------
+>簡単なサンプル
 適当にファイル作って、2列目を獲得する(cut -d, -f2)サンプルです。
 3系なのでbytesで値が帰ってきます。（str返してくれるオプション(キーワード引数)ありそうだけど）
 ３系の場合、返ってくるのがbytesなので、コードの最後にありますが、universal_newlines=Trueつけるとstrで返ってきます。
@@ -124,3 +175,60 @@ subprocess.check_call('ls')
 check_output()はコマンドを実行した結果を返し、エラー時には例外を投げる。
 subprocess.check_output('ls')
 
+--------------------------------------------------------------------
+>リモートアクセス
+
+sudo apt-get install xrdp
+cd /etc/xrdp
+sudo http://w.vmeta.jp/temp/km-0411.ini
+sudo ln -s
+
+
+1.Raspbianの自動ログイン・実行
+自動ログインと自動実行の設定をします。
+
+1. 自動ログインの設定をします。
+>sudo vim /etc/inittab
+1:2345:respawn:/sbin/getty 38400 tty1
+の行を#でコメントアウトします。 そのすぐしたの行に以下の行を
+1:2345:respawn:/bin/login -f pi tty1 /dev/tty1 2>&1
+
+２.自動起動の設定
+Raspberry Piを起動した時に、WebSocketサーバーが自動起動するように設定します。
+Rubyで作ったWebSocketサーバを自動起動してみます。
+
+>nanoで/etc/rc.localを編集します。
+$sudo nano /etc/rc.local
+以下の内容に変更します。「exit 0」の前に「ruby /home/pi/mugbot_server_v1_0_0.rb &」を追加します。
+
+exit 0の前にruby /home/pi/mubogt_server_v1_0_0.rb &
+を追加します。（mubogt_server_v1_0_0.rbはWebSocketサーバのファイル名）
+&をつけないと、先に行けずに止まってしまいます。
+
+mugbot_server_v1_0_0.rbに実行権を付与します。
+$chmod +x /home/pi/mugbot_server_v1_0_0.rb
+ 自動起動が出来ているか再起動して確認します。
+$ sudo reboot
+
+また、自動起動後に
+$ ps ax
+ を実行することで、このプロセスが走っているかどうかを確認できます。
+
+nanoで/etc/rc.localを編集します。
+$sudo nano /etc/rc.local
+ 以下
+して、以下をexit 0 と書かれている前に書く
+# パスやファイル名はお好きに
+$ sudo -u pi /home/pi/bin/my-script.sh
+
+------------------------------------------------------------
+3. スクリプトを用意する
+$ cd ~
+$ mkdir bin
+$ vi bin/my-script.sh
+
+書き込む内容はたとえば下記のような感じ
+#!/bin/sh
+
+SCRIPT_PATH=/home/pi/script/
+$OCTOPRINT_HOME/run

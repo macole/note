@@ -1,12 +1,11 @@
-コントロール
+>コントロール
 
-Dualshock3の利用に挑戦。
+Dualshock3の利用。
 まずは、Bluetoothを使えるようにしないといけません。
 そこで、Raspberry PiでBluetoothを使うために Planex の BT-Micro3H2Xを使うことにしました。
 このアダプタは無線LANとBluetoothのコンボになっているため、１つのUSBポートで無線LANとBluetoothを利用できるようになります。
 
 まずは、Bluetoothを使えるようにするために、
-
 　　　sudo apt-get update
 　　　sudo apt-get install bluetooth bluez-utils bluez-compat bluez-hcidump
 　　　sudo apt-get install libusb-dev libbluetooth-dev
@@ -62,8 +61,4 @@ DualShock3のPSボタンを押して接続します。Connected Sony Entertainme
 　　　cat /dev/input/js0
 
 して、コントローラを傾けたり、ボタンやアナログスティックを操作すると何かしらのバイナリっぽいデータが画面に出力されるのが確認できるはずです。Ctrl+Cで中断します。
-
-
-
-
-　これで、Xboxのレシーバをぶら下げた状態に比べると随分スッキリしました。USBポートも片方空いた状態にできました。
+これで、Xboxのレシーバをぶら下げた状態に比べると随分スッキリしました。USBポートも片方空いた状態にできました。

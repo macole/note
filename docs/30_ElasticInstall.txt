@@ -1,0 +1,353 @@
+Elasticsearch解説
+
+http://code46.hatenablog.com/entry/2014/01/21/115620　はじめに
+http://dev.classmethod.jp/server-side/elasticsearch-getting-started-02/
+
+http://engineer.wantedly.com/2014/02/25/elasticsearch-at-wantedly-1.html
+http://gihyo.jp/dev/serial/01/js-foundation/0008
+http://acro-engineer.hatenablog.com/entry/2016/01/29/113000	気を付ける点
+http://acro-engineer.hatenablog.com/entry/2014/12/22/074819	設定
+https://medium.com/hello-elasticsearch
+
+https://www.elastic.co/downloads/elasticsearch　
+https://www.elastic.co/guide/en/elasticsearch/reference/current/setup-repositories.html　インストール
+
+java -version
+echo $JAVA_HOME
+
+1 APTを使ったインストール
+Elasticsearch/Logstach/Kibana
+：aptだけの場合成功したが、リポジトリを変えるときに不具合発生
+
+>Download and install the Public Signing Key:
+wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+
+>Save the repository definition to /etc/apt/sources.list.d/elasticsearch-2.x.list:
+echo "deb https://packages.elastic.co/elasticsearch/2.x/debian stable main" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-2.x.list
+echo "deb https://packages.elastic.co/logstash/2.3/debian stable main" | sudo tee -a /etc/apt/sources.list
+echo "deb http://packages.elastic.co/kibana/4.5/debian stable main" | sudo tee -a /etc/apt/sources.list　Kibana
+
+>Run apt-get update and the repository is ready for use. You can install it with:
+sudo apt-get update && sudo apt-get install elasticsearch
+sudo apt-get update && sudo apt-get install logstash
+sudo apt-get update && sudo apt-get install kibana
+
+>Configure Elasticsearch to automatically start during bootup.
+>If your distribution is using SysV init, then you will need to run:
+sudo update-rc.d elasticsearch defaults 95 10
+sudo update-rc.d kibana defaults 95 10
+
+------------------------------------------------------------------------------------------
+>Elasticsearchインストール
+ElasticSearchもAptリポジトリを利用してインストールできます
+
+$ wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+$ echo "deb http://packages.elastic.co/elasticsearch/1.7/debian stable main" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-1.7.list
+$ sudo apt-get update && sudo apt-get install elasticsearch
+自動起動を設定しておき
+
+$ sudo update-rc.d elasticsearch defaults 95 10
+ElasticSearchを起動
+
+$ sudo service elasticsearch start
+
+Fluentd(td-agent)のインストール
+Installing Fluentd Using deb Packageにしたがってインストールします
+インストールシェルが用意されているので、ダウンロードして実行するだけ
+
+$ curl -L https://td-toolbelt.herokuapp.com/sh/install-ubuntu-trusty-td-agent2.sh | sh
+できない
+
+Fluentd ElasticSearchプラグインのインストール
+Fluentdで受けたログをElasticSearchに保存するにはfluent-plugin-elasticsearchをインストールします
+プラグインのインストールはtd-agentに含まれるfluent-gemコマンドを実行します
+$ sudo /opt/td-agent/embedded/bin/fluent-gem install fluent-plugin-elasticsearch
+
+ーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーーー
+http://knowledge.sakura.ad.jp/tech/2736/
+
+表1 Logstashのプラグイン種別
+種別	説明	主なプラグイン名
+input	ログを記録するイベントを監視する	eventlog、file、pipe、stdin、tcpなど
+codec	inputから受け取ったイベントを指定した形式に整形する	rubydebug、json、fluent、plainなど
+filter	イベントに対しフィルタ処理を行う	checksum、json、xmlなど
+output	ログの出力を行う	csv、exec、email、file、elasticsearchなど
+
+ElasticsearchはJavaで実装されており、またデータ検索エンジンとして「Lucene」が組み込まれているのが特徴。
+リアルタイムでのデータ分析や検索機能に優れており、GitHubのコードリポジトリ検索機能や、英ニュースサイト「The Guardian」のアクセス解析などでElasticSearchが採用されているという。
+このElasticsearchをLogstashと組み合わせてログの出力先として使用することで、Elasticsearchが備える強力な検索・分析機能を使ったログの解析が可能となる。
+また、ElasticsearchはHTTP（REST）ベースでクエリを実行できるため、さまざまなクライアントからデータに容易にアクセスできるという特徴もある。
+
+wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | sudo apt-key add -
+echo "deb https://packages.elastic.co/elasticsearch/2.x/debian stable main" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-2.x.list
+sudo apt-get update && sudo apt-get install elasticsearch
+
+sudo update-rc.d elasticsearch defaults 95 10
+Elasticsearchでは、「/etc/elasticsearch」ディレクトリ以下に設定ファイルがインストールされる。
+このディレクトリ内にある「elasticsearch.yml」がElasticsearchのメインの設定ファイル。
+
+ほどんどの設定はデフォルトのままで問題ないが、Kibanaを使用するためにはいくつか設定項目を確認・追加する必要がある。まず1つめは、Elasticsearchが待ち受けを行うIPアドレスとポートの指定だ。IPアドレスについては、「network.bind_host」という項目で指定できる。デフォルトではこれは次のようにコメントアウトされているので、行頭の「#」を削除し、IPアドレスを実際に使用するものに書き換えておこう。
+
+#network.bind_host: 192.168.0.1
+使用するポートは「transport.tcp.port」項目で指定する。デフォルトでは9300番ポートを使用するが、ほかのものに変えたい場合は同様に下記の行を書き換えよう。
+#transport.tcp.port: 9300
+
+これにら加え、Kibanaから直接Elasticseachを操作できるようにするために設定ファイルの最後に次の行を追加しておく。
+
+# enable cross-origin resource sharing
+http.cors.enabled: true
+この設定項目について詳しくはドキュメントで解説されているが、この設定項目を追加することでクロスドメインアクセスを許可し、Webブラウザ上で動作するKibanaからElasticseachに対し直接クエリを行えるようになる。
+
+設定が完了したら、systemctlコマンドを実行してelasticseachサービスを再起動して設定を反映させておく。
+再起動
+systemctl restart elasticsearch
+
+http://gihyo.jp/dev/serial/01/js-foundation/0008
+
+-----------------------------------------------------------
+インストールする
+
+$ sudo apt-get update && sudo apt-get install elasticsearch
+起動時にサービスが立ち上がるよう設定する
+
+$ sudo update-rc.d elasticsearch defaults 95 10
+起動させる
+
+$ sudo /etc/init.d/elasticsearch start
+
+Pluginをインストールする (elasticsearch-head / ElasticHQ)
+
+Elasticsearch の plugin コマンドを使ってインストールする。
+古いバージョンだと -install というオプションで指定していたが、現在のバージョン(v2.1)だとハイフンは必要なく install というオプションになっているようです。
+$ sudo /usr/share/elasticsearch/bin/plugin install mobz/elasticsearch-head
+$ sudo /usr/share/elasticsearch/bin/plugin install royrusso/elasticsearch-HQ
+Proxy 経由でインストールする場合は -DproxyHost=XXX -DproxyPort=XXX を指定する。
+$ sudo /usr/share/elasticsearch/bin/plugin -DproxyHost=XXX -DproxyPort=XXX install XXX
+これで次の URL にアクセスすれば、Plugin の画面が表示される。
+http://localhost:9200/_plugin/head/
+http://localhost:9200/_plugin/hq/
+
+curl 'localhost:9200'
+
+ディレクトリ構成は、こちらを参照。
+
+Directory Layout | Elasticsearch Reference [2.3] | Elastic 
+
+「/usr/share/elasticsearch」にスクリプトやプラグインなど。
+
+$ find /usr/share/elasticsearch -type d
+/usr/share/elasticsearch
+/usr/share/elasticsearch/bin
+/usr/share/elasticsearch/lib
+/usr/share/elasticsearch/plugins
+
+インデックスの保存先は「/var/lib/elasticsearch/data」、ログは「/var/log/elasticsearch」となります。
+
+設定ファイルは、「/etc/elasticsearch」。
+
+$ sudo find /etc/elasticsearch
+/etc/elasticsearch
+/etc/elasticsearch/logging.yml
+/etc/elasticsearch/elasticsearch.yml
+/etc/elasticsearch/scripts
+
+環境変数の定義は、「/etc/default/elasticsearch」にあります。
+
+起動と停止
+起動。
+
+$ sudo service elasticsearch start
+
+停止。
+
+$ sudo service elasticsearch stop
+
+Kuromojiのインストール
+検索に使うなら、きっと入れておいた方がいいだろうとKuromojiをインストール。
+
+Kuromojiのプラグインって、本家に入ったんですねぇ…
+
+https://github.com/elastic/elasticsearch/tree/master/plugins/analysis-kuromoji
+
+インストール。
+
+$ sudo -u elasticsearch /usr/share/elasticsearch/bin/plugin install analysis-kuromoji
+
+とりあえず、再起動。
+
+$ sudo service elasticsearch restart
+
+それでは、Kuromojiの設定をしてみます。
+
+一応、ユーザー定義辞書はある前提でいきます。中身は空ですが（Kuromojiの定義方法で書けばいいのだろうとたかをくくって…）、事前に作っておく必要があります。
+
+$ sudo touch /etc/elasticsearch/userdict_ja.txt && sudo chown root.elasticsearch /etc/elasticsearch/userdict_ja.txt
+
+で、こんな設定で（Solrの設定を参考にしています）。
+settings.json
+
+{
+  "settings": {
+    "index": {
+      "analysis": {
+        "tokenizer": {
+          "kuromoji_tokenizer_search": {
+            "type": "kuromoji_tokenizer",
+            "mode": "search",
+            "discard_punctuation" : "true",
+            "user_dictionary" : "userdict_ja.txt"
+          }
+        },
+        "analyzer": {
+          "kuromoji_analyzer": {
+            "type": "custom",
+            "tokenizer": "kuromoji_tokenizer_search",
+            "filter": ["kuromoji_baseform",
+                       "kuromoji_part_of_speech",
+                       "cjk_width",
+                       "stop",
+                       "ja_stop",
+                       "kuromoji_stemmer",
+                       "lowercase"]
+          }
+        }
+      }
+    }
+  }
+}
+
+登録。
+
+$ curl -XPUT http://localhost:9200/myindex -d @settings.json
+{"acknowledged":true}
+
+確認。
+
+$ curl -XPOST 'http://localhost:9200/myindex/_analyze?analyzer=kuromoji&pretty' -d 'Elasticsearchは、全文検索エンジンです。'
+{
+  "tokens" : [ {
+    "token" : "elasticsearch",
+    "start_offset" : 0,
+    "end_offset" : 13,
+    "type" : "word",
+    "position" : 0
+  }, {
+    "token" : "全文",
+    "start_offset" : 15,
+    "end_offset" : 17,
+    "type" : "word",
+    "position" : 2
+  }, {
+    "token" : "検索",
+    "start_offset" : 17,
+    "end_offset" : 19,
+    "type" : "word",
+    "position" : 3
+  }, {
+    "token" : "エンジン",
+    "start_offset" : 19,
+    "end_offset" : 23,
+    "type" : "word",
+    "position" : 4
+  } ]
+}
+
+それっぽい。
+
+プラグイン
+プラグインは、elasticsearch-headとelasticsearch-HQあたりをとりあえず入れておけばいいのでしょうか？
+
+いつも入れているElasticsearchのプラグイン - @johtaniの日記 2nd
+
+Marvelとかは、今度調べましょう…。
+
+Dockerイメージ
+と、ここまでやったところで、オマケ的にDockerfileを書いてみます。
+Dockerfile
+
+FROM ubuntu:latest
+
+ENV JAVA_HOME /usr/lib/jvm/java-8-oracle
+
+ENV ELASTICSEARCH_VERSION 2.1.1
+ENV ELASTICSEARCH_REPOSITORY http://packages.elasticsearch.org/elasticsearch/2.x/debian
+
+EXPOSE 9200 9300
+
+## Oracle JDK 8インストール
+RUN echo oracle-java8-installer shared/accepted-oracle-license-v1-1 select true | debconf-set-selections && \
+    apt-get install -y software-properties-common && \
+    add-apt-repository -y ppa:webupd8team/java && \
+    apt-get update && \
+    apt-get install -y oracle-java8-installer
+
+## ツールインストール
+RUN apt-get install -y wget \
+                       curl \
+                       vim
+
+## Elasticsearchインストール
+RUN wget -qO - https://packages.elastic.co/GPG-KEY-elasticsearch | apt-key add - && \
+    echo "deb ${ELASTICSEARCH_REPOSITORY} stable main" | sudo tee -a /etc/apt/sources.list.d/elasticsearch-2.x.list && \
+    apt-get update && \
+    apt-get install -y elasticsearch=${ELASTICSEARCH_VERSION}
+
+RUN cp -p /etc/elasticsearch/elasticsearch.yml /etc/elasticsearch/elasticsearch.yml.default
+ADD elasticsearch.yml /etc/elasticsearch/elasticsearch.yml
+RUN chown root.elasticsearch /etc/elasticsearch/elasticsearch.yml
+
+## Elasticsearchプラグインインストール
+RUN sudo -u elasticsearch /usr/share/elasticsearch/bin/plugin install analysis-kuromoji && \
+    sudo -u elasticsearch /usr/share/elasticsearch/bin/plugin install mobz/elasticsearch-head && \
+    sudo -u elasticsearch /usr/share/elasticsearch/bin/plugin install royrusso/elasticsearch-HQ
+
+## プラグイン等向け設定ファイル
+RUN touch /etc/elasticsearch/userdict_ja.txt && \
+    chown root.elasticsearch /etc/elasticsearch/userdict_ja.txt
+
+ENTRYPOINT service elasticsearch start && \
+            sudo -u elasticsearch touch /var/log/elasticsearch/elasticsearch.log && \
+            tailf /var/log/elasticsearch/elasticsearch.log
+
+ホスト側からも接続できるように、「elasticsearch.yml」は以下の内容で準備。
+elasticsearch.yml
+
+network.host: 0.0.0.0
+
+ビルド。
+
+$ docker build -t kazuhira/elasticsearch:2.1.1 .
+
+起動。
+
+$ docker run -it --rm -p 9200:9200 -p 9300:9300 --name elasticsearch kazuhira/elasticsearch:2.1.1
+
+参考にしたのは、こちらです。
+
+https://github.com/docker-library/elasticsearch/tree/master/2.1
+
+
+インストール
+
+elasticsearchがインストールしてあれば、プラグインコマンド一発でインストールできます。
+
+/usr/local/elasticsearch-0.90.2/bin/plugin -install mobz/elasticsearch-head
+ブラウザでアクセス
+
+http://localhost.jp:9200/_plugin/head/
+にアクセスします。
+
+「Overview」タブ
+
+導入
+
+めっちゃ簡単。（プラグインとしてインストール編）
+cd /path/to/elasticserach/bin
+./plugin -install royrusso/elasticsearch-HQ
+インストール後の elasticsearch の再起動も不要（のようだ）
+最後に
+
+本当にちょっとしか使っていないけど、同じような機能が実装された elasticsearch head と比べると見栄えは格段に良いが、elasticsearch へのアプローチ（ユーザーへの見せ方）として elasticsearch head はインデックス、Elastic HQ はノード（ホスト）と異なった印象を受けたので、どっちが良い悪いとかは一概に言えないかも。
+ちなみに、elasticsearch head のスクリーンショットは以下の通り。

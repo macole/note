@@ -1,59 +1,9 @@
-﻿1.Raspbianの自動ログイン・実行
-自動ログインと自動実行の設定をします。
-
- 1. 自動ログインの設定をします。
- 以下のファイルを開いて編集します。
->sudo vim /etc/inittab
-1:2345:respawn:/sbin/getty 38400 tty1
-の行を#でコメントアウトします。 そのすぐしたの行に以下の行を
-1:2345:respawn:/bin/login -f pi tty1 /dev/tty1 2>&1
-
-２.自動起動の設定
-Raspberry Piを起動した時に、WebSocketサーバーが自動起動するように設定します。
-Rubyで作ったWebSocketサーバを自動起動してみます。
-
->nanoで/etc/rc.localを編集します。
-$sudo nano /etc/rc.local
-以下の内容に変更します。「exit 0」の前に「ruby /home/pi/mugbot_server_v1_0_0.rb &」を追加します。
-
-exit 0の前に
-ruby /home/pi/mubogt_server_v1_0_0.rb &
-を追加します。（mubogt_server_v1_0_0.rbはWebSocketサーバのファイル名）
-&をつけないと、先に行けずに止まってしまいます。
-
-mugbot_server_v1_0_0.rbに実行権を付与します。
-$chmod +x /home/pi/mugbot_server_v1_0_0.rb
- 自動起動が出来ているか再起動して確認します。
-$ sudo reboot
-
-また、自動起動後に
-$ ps ax
- を実行することで、このプロセスが走っているかどうかを確認できます。
-
-nanoで/etc/rc.localを編集します。
-$sudo nano /etc/rc.local
- 以下
- 
- 
- して、以下をexit 0 と書かれている前に書く
-# パスやファイル名はお好きに
-$ sudo -u pi /home/pi/bin/my-script.sh
-
-3. スクリプトを用意する
-$ cd ~
-$ mkdir bin
-$ vi bin/my-script.sh
-
-書き込む内容はたとえば下記のような感じ
-#!/bin/sh
-
-SCRIPT_PATH=/home/pi/script/
-$OCTOPRINT_HOME/run
-
+﻿
 Setup
 amixer cset numid=3 1
 alsamixer
 
+----------------------------------------------------------
 ４．音が鳴るか確認。
 サイン波 
 $ speaker-test -t sine -f 440 -c 2 -s 1
@@ -62,8 +12,12 @@ Wav音源
 $ wget http://www.jahozafat.com/0093058674/WAVS/Movies/Full_Metal_Jacket/numnuts.wav 
 
 MP3音源 
+sudo apt-get install mpg321
+sudo apt-get install audacious clementine
+
 $ wget http://www.hmix.net/music/c/c3.mp3
 $ mpg321 c3.mp3
+
  
 M4A音源
 $ mplayer test.m4a

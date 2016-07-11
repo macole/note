@@ -1,0 +1,473 @@
+2016-04-02 
+
+Raspberry Pi ２号機を、Raspbian 7（wheezy）からRaspbian 8 (Jessie)へ移行してみる。
+
+手持ちの4GBのSDカードに下記のイメージを書き込み、早速起動してみるところからスタート。
+起動したところで、例によって、SDカードへの余計な書き込みがなるべく発生しない方向で、調整してみることにする。
+
+Index
+
+suでrootになるためのrootパスワード設定
+rootでのリモートログイン禁止
+IPアドレスを固定アドレスにする
+キーボードレイアウトを jp106 に。
+タイムゾーンをTokyoにする
+スワップファイルをオフ
+manコマンドのキャッシュ廃止
+fake-hwclock の停止
+cron.hourlyの停止
+ext4ファイルシステムのジャーナルを廃止
+失敗手順
+成功手順
+時刻合わせ(ntp)（作業途中）
+.bashrcの設定変更（自動保存ファイル無効化など）
+tmpfsファイルシステムによるオンメモリ化
+tmp関係のオンメモリ化
+/var/logのオンメモリ化
+/var/mailのオンメモリ化
+ログローテーション(logrotate)
+その他
+bash-completion削除
+残事項
+今回選択したのは、
+
+Raspbian Jessie Lite のほう。これは最小構成で起動時のGUIもないやつ。
+
+初期ログイン時のユーザーIDは pi 、パスワードは raspberry でOK。
+
+バージョンなど。
+
+$ uname -a
+Linux raspberrypi 4.1.19+ #858 Tue Mar 15 15:52:03 GMT 2016 armv6l GNU/Linux
+$ cat /etc/os-release
+以下、作業内容中のプロンプトが $ の場合はユーザーpi、#の場合は root である。念のため。
+
+suでrootになるためのrootパスワード設定 †
+rootで作業することが多いので、rootにパスワードを設定し、suでrootになれるようにする。
+
+$ sudo passwd root
+Enter new UNIX password:
+Retype new UNIX password:
+passwd: password updated successfully
+うまく設定できたか確認。
+
+$ su
+Password:
+root@rasp02:/etc#
+↑
+rootでのリモートログイン禁止 †
+/etc/ssh/sshd_configの下記の行を確認します。
+
+PermitRootLogin without-password
+Jessieのsshdの設定は、デフォルトでは上記のように without-passwd となっている。
+この意味は
+
+パスワード認証によるrootのログイン禁止
+公開鍵認証によるrootのログイン許可 だそうで、ひとまずこのままでOKとする。
+↑
+IPアドレスを固定アドレスにする †
+まずはリモートで入れるように、IPアドレスを固定で振る。
+
+$ cd /etc/network
+$ sudo cp -p interfaces interfaces.orig
+$ sudo vi interfaces
+interfacesを下記のようにする。
+
+ 
+# interfaces(5) file used by ifup(8) and ifdown(8)
+
+# Please note that this file is written to be used with dhcpcd
+# For static IP, consult /etc/dhcpcd.conf and 'man dhcpcd.conf'
+
+# Include files from /etc/network/interfaces.d:
+source-directory /etc/network/interfaces.d
+
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+address 192.168.1.22
+netmask 255.255.255.0
+network 192.168.1.0
+broadcast 192.168.1.255
+gateway 192.168.1.1
+dns-nameservers 192.168.1.1       <= /etc/resolv.confを自動生成の際に追加(avahi)
+次に dhcpcd を停止する。
+（警告が表示された場合は、それに従いコマンドを追加で実行）
+
+# systemctl stop dhcpcd.service
+Warning: Unit file of dhcpcd.service changed on disk, 'systemctl daemon-reload' recommended.
+# systemctl daemon-reload
+さて、このままでは次回OSが起動した時に、再びdhcpcdが起動してしまうため、自動起動しないようにする。
+
+# systemctl disable dhcpcd.service
+Synchronizing state for dhcpcd.service with sysvinit using update-rc.d...
+Executing /usr/sbin/update-rc.d dhcpcd defaults
+Executing /usr/sbin/update-rc.d dhcpcd disable
+insserv: warning: current start runlevel(s) (empty) of script `dhcpcd' overrides LSB defaults (2 3 4 5).
+insserv: warning: current stop runlevel(s) (0 1 2 3 4 5 6) of script `dhcpcd' overrides LSB defaults (0 1 6).
+IPアドレスはDHCPのものが残るので、OSを再起動するか、またはネットワークを再起動する。
+
+# reboot
+または
+# systemctl reload networking.service
+リモートで操作していると若干危険だが、少し待っていればプロンプトが表示されるはず。
+
+補足： /etc/resolv.confがネットワークインターフェース起動（ブート時など）のたびに
+
+avahi-daemon -> resolvconf
+経由で自動書換される。
+これを常に固定化するには、avahi-daemonを停止する必要があるようだ。
+
+↑
+キーボードレイアウトを jp106 に。 †
+$ sudo vi /etc/default/keyboard
+主な部分のみ抜粋。
+
+XKBMODEL="jp106"
+XKBLAYOUT="jp"
+XKBVARIANT=""
+XKBOPTIONS=""
+
+BACKSPACE="guess"
+↑
+タイムゾーンをTokyoにする †
+ここは日本なので。
+
+$ LANG= sudo raspi-config
+でもって、
+5 Internationalisation Options / I2 Change Timezon / Asia 
+とたどって、一覧から Tokyo を選択します。
+ちなみに、リモートの端末でraspi-configするときは、LANG=をつけてやったほうが、文字のズレ等なくなって良い感じです（putty使ってると）。
+
+↑
+スワップファイルをオフ †
+Raspbianでは、いわゆるLinuxで普通に使われているスワップファイルではなく、
+
+dphys-swapfile というものが使われている。
+とはいえ、SDカード上に作例されるので、早速オフにする。
+
+$ sudo dphys-swapfile swaoff
+とすると、その場でスワップファイルがオフになる。
+さらに、次回以降の再起動時にもデフォルトでオフになるように、サービスが起動しないようにする。
+
+$ sudo insserv -v -r dphys-swapfile
+insserv -v -r dphys-swapfile
+insserv: remove service /etc/init.d/../rc2.d/S02dphys-swapfile
+insserv: remove service /etc/init.d/../rc3.d/S02dphys-swapfile
+insserv: remove service /etc/init.d/../rc4.d/S02dphys-swapfile
+insserv: remove service /etc/init.d/../rc5.d/S02dphys-swapfile
+insserv: creating .depend.boot
+insserv: creating .depend.start
+insserv: creating .depend.stop
+↑
+manコマンドのキャッシュ廃止 †
+内容は「Raspberry Pi/各種設定/manコマンドのキャッシュ廃止」と同じ。
+作業内容・変更点のみ記載。
+まずは、manコマンド実行のたびにキャッシュに書き込む動作を抑止。
+
+# cp -p manpath.config manpath.config.orig
+# vi manpath.config
+# diff -u manpath.config.orig manpath.config
+--- manpath.config.orig 2015-01-06 14:31:22.000000000 +0900
++++ manpath.config      2016-04-08 09:36:39.495563111 +0900
+@@ -63,12 +63,12 @@
+ #
+ #              *MANPATH*     ->        *CATPATH*
+ #
+-MANDB_MAP      /usr/man                /var/cache/man/fsstnd
+-MANDB_MAP      /usr/share/man          /var/cache/man
+-MANDB_MAP      /usr/local/man          /var/cache/man/oldlocal
+-MANDB_MAP      /usr/local/share/man    /var/cache/man/local
+-MANDB_MAP      /usr/X11R6/man          /var/cache/man/X11R6
+-MANDB_MAP      /opt/man                /var/cache/man/opt
++MANDB_MAP      /usr/man
++MANDB_MAP      /usr/share/man
++MANDB_MAP      /usr/local/man
++MANDB_MAP      /usr/local/share/man
++MANDB_MAP      /usr/X11R6/man
++MANDB_MAP      /opt/man
+ #
+ #---------------------------------------------------------
+ # Program definitions.  These are commented out by default as the value
+たまにはunified形式で差分を出してみたりして（-uオプション）。
+
+上記の /var/cache/man は使用しなくなるので、消してしまっても良さそう。
+
+# cd /var/cache
+# rm -rf man
+それと、crontabによるman-dbの実行（１日１回）を抑止する。実行権限を落とす。
+
+# cd /etc/cron.daily/
+# ls -l man-db
+-rwxr-xr-x 1 root root 1293 Jan  6  2015 man-db
+# chmod ugo-x man-db
+# ls -l man-db
+-rw-r--r-- 1 root root 1293 Jan  6  2015 man-db
+↑
+fake-hwclock の停止 †
+内容は「Raspberry Pi/各種設定/時刻合わせ」と同じ。
+/etc/fake-hwclock.data がcrontabにより１時間に１回更新されるので、実行権限を落として停止しとく。
+
+# cd /etc/cron.hourly
+# ls -l fake-hwclock
+-rwxr-xr-x 1 root root 191 Mar 17  2015 fake-hwclock
+# chmod ugo-x fake-hwclock
+# ls -l fake-hwclock
+-rw-r--r-- 1 root root 191 Mar 17  2015 fake-hwclock
+↑
+cron.hourlyの停止 †
+１時間に１回実行される /etc/cron.hourly には先ほどの fake-hwclock しかなく、先ほど実行を抑止したので、ついでに cron.hourlyも止めることにする（syslogも減るし）。
+
+# cd /etc
+# cp -p crontab crontab.orig
+# vi /etc/crontab
+# diff -u crontab.orig crontab
+--- crontab.orig        2015-09-06 03:20:30.000000000 +0900
++++ crontab     2016-04-08 10:23:51.574782312 +0900
+@@ -8,7 +8,7 @@
+ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+ # m h dom mon dow user command
+-17 *   * * *   root    cd / && run-parts --report /etc/cron.hourly
++#17 *  * * *   root    cd / && run-parts --report /etc/cron.hourly
+ 25 6   * * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.daily )
+ 47 6   * * 7   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.weekly )
+ 52 6   1 * *   root    test -x /usr/sbin/anacron || ( cd / && run-parts --report /etc/cron.monthly )
+今回、Jessieでは、fake-hwclock自体は残しておくことにして、下記の動作はそのまま実行させることにするかなと。
+
+OS起動時の /etc/fake-hwclock.data 読み込み、およびリアルタイムクロックの設定
+OS停止時の /etc/fake-hwclock.data 書き込み
+↑
+ext4ファイルシステムのジャーナルを廃止 †
+SDカードの書き換え寿命を伸ばすため（気休め？）、ルートファイルシステムのジャーナルを廃止する。
+まずは初期状態を確認。
+
+# tune2fs -l /dev/mmcblk0p2 | grep "Filesystem features:"
+Filesystem features:   has_journal ext_attr resize_inode dir_index filetype needs_recovery extent \ （ホントは１行です）
+                          flex_bg sparse_super large_file uninit_bg dir_nlink extra_isize
+has_journalという記述があるので、ジャーナルが有効ということ。
+
+↑
+失敗手順 †
+下記にてジャーナルを無効にしてみる。
+
+# tune2fs -O ^has_journal /dev/mmcblk0p2
+tune2fs 1.42.12 (29-Aug-2014)
+The has_journal feature may only be cleared when the filesystem is
+unmounted or mounted read-only.
+なんとエラーになってしまった。以前はできたような気がしたのだが・・・。
+マウントしているとダメだということか。
+
+↑
+成功手順 †
+ということで、マウント状態で変更するのは諦めて、手持ちの１号機（Raspbian Wheezy）を使って、マウントせずにファイルシステムのオプションを書き換えることにする。
+まずは、２号機のルートファイルシステムのパーティションのUUIDを/etc/fstabなどで確認・メモしておき、２号機をシャットダウンする。
+次に、SDカードリーダーを使って１号機へ接続、ログインして、先ほどのUUIDからデバイス名を確認しつつ下記のコマンドを実行する。
+この例ではUUIDは
+
+eda95d8a-9cdd-4224-96d0-890b4791600c
+としている。
+
+# ls -l /dev/disk/by-uuid/ | grep eda95d8a-9cdd-4224-96d0-890b4791600c
+lrwxrwxrwx 1 root root 10  4月 10 21:44 eda95d8a-9cdd-4224-96d0-890b4791600c -> ../../sdd2
+# tune2fs -O ^has_journal /dev/sdd2
+tune2fs 1.42.5 (29-Jul-2012)
+# sync
+最後の sync はおまけ、というか気休め。
+
+あとはSDカードリーダーからSDカードを引っこ抜き、２号機へセットして起動する。
+うまく行ったかどうかは下記コマンドで再び確認。
+
+# tune2fs -l /dev/mmcblk0p2 | grep "Filesystem features:"
+Filesystem features:   ext_attr resize_inode dir_index filetype extent \ （ホントは１行です）
+                       flex_bg sparse_super large_file uninit_bg dir_nlink extra_isize
+has_journal が消えているのでうまく行ったようである。
+
+↑
+時刻合わせ(ntp)（作業途中） †
+/etc/ntp.confを編集し、近所のNTPサーバーに変更します。
+
+# cp -p ntp.conf ntp.conf.orig
+# vi ntp.conf
+# diff -u ntp.conf.orig ntp.conf
+--- ntp.conf.orig       2015-11-02 13:31:05.000000000 +0900
++++ ntp.conf    2016-04-10 22:24:15.067912629 +0900
+@@ -1,6 +1,6 @@
+ # /etc/ntp.conf, configuration for ntpd; see ntp.conf(5) for help
+
+-driftfile /var/lib/ntp/ntp.drift
++#driftfile /var/lib/ntp/ntp.drift
+
+
+ # Enable this if you want statistics to be logged.
+@@ -18,10 +18,7 @@
+ # pool.ntp.org maps to about 1000 low-stratum NTP servers.  Your server will
+ # pick a different set every time it starts up.  Please consider joining the
+ # pool: <http://www.pool.ntp.org/join.html>
+-server 0.debian.pool.ntp.org iburst
+-server 1.debian.pool.ntp.org iburst
+-server 2.debian.pool.ntp.org iburst
+-server 3.debian.pool.ntp.org iburst
++server ntp.asahi-net.or.jp iburst
+
+
+ # Access control configuration; see /usr/share/doc/ntp-doc/html/accopt.html for
+# systemctl restart ntp
+ntpd のリスタートは、従来(wheezy)の場合は、
+
+/etc/init.d/ntp restart
+などとやるのだが、Jessieからはsystemctl(systemd)を使うことになる。
+
+↑
+.bashrcの設定変更（自動保存ファイル無効化など） †
+SDカード書き込み抑止関連。
+変更点のみ。
+
+$ diff orig.bashrc .bashrc
+10a11,13
+> # locale
+> test -z "$LANG" && export LANG=ja_JP.utf8
+>
+19c22
+< HISTSIZE=1000
+---
+> HISTSIZE=100
+20a24
+> unset HISTFILE
+113a118,120
+>
+> # less is not used .lesshst
+> export LESSHISTFILE=-
+↑
+tmpfsファイルシステムによるオンメモリ化 †
+↑
+tmp関係のオンメモリ化 †
+/tmp と /var/tmp をtmpfs(オンメモリ)化して、SDカード書き換え抑止する。
+
+# cd /etc
+# cp -p fstab fstab.orig
+# vi fstab
+# diff -u fstab.orig fstab
+--- fstab.orig  2016-03-18 17:17:34.290000000 +0900
++++ fstab       2016-04-14 10:59:05.728022087 +0900
+@@ -3,3 +3,5 @@
+ /dev/mmcblk0p2  /               ext4    defaults,noatime  0       1
+ # a swapfile is not a swap partition, no line here
+ #   use  dphys-swapfile swap[on|off]  for that
++tmpfs   /tmp            tmpfs   defaults,size=32m,noatime,mode=1777 0 0
++tmpfs   /var/tmp        tmpfs   defaults,size=32m,noatime,mode=1777 0 0
+そしてすかさずリブートを実行。起動したら、結果を確認。
+
+$ df -h
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/root       1.2G  860M  278M  76% /
+devtmpfs        214M     0  214M   0% /dev
+tmpfs           218M     0  218M   0% /dev/shm
+tmpfs           218M  4.4M  214M   3% /run
+tmpfs           5.0M  4.0K  5.0M   1% /run/lock
+tmpfs           218M     0  218M   0% /sys/fs/cgroup
+tmpfs            32M     0   32M   0% /var/tmp
+tmpfs            32M     0   32M   0% /tmp
+/dev/mmcblk0p1   60M   20M   41M  34% /boot
+/tmp と /var/tmp がtmpfsになっているのでOK。
+
+おまけ
+マウント前の/tmpに残ったゴミを消す。
+
+# cd /
+# umount /tmp
+# cd /tmp
+# rm -rf * .*
+# cd /
+# mount /tmp  （または reboot）
+一応リブートして立ち上がることを確認すると良いかも。
+
+↑
+/var/logのオンメモリ化 †
+まずは /etc/fstab へ下記の1行を追加。
+
+# grep /var/log /etc/fstab
+tmpfs   /var/log        tmpfs   defaults,size=32m,noatime,mode=0755 0 0
+/var/logをオンメモリ化すると、OS起動・再起動のたびに、/var/log/に存在していてほしいファイル(lastlogとか)、ディレクトリが、なくなってしまう。
+が、実はOS起動時に自動的にそれらを作るための仕組みがすでに備わっており(systemd-tmpfiles)、設定ファイルを書くことにより、ファイル、ディレクトリ、シンボリックリンク等を作成してくれる。
+
+とりあえず、下記のものが作成されるようにしてみる。
+
+/var/log/fsck ディレクトリ
+/var/log/lastlog ファイル
+また、下記はなんとなくいらないなあ。なので作成されない方向で。
+
+/var/log/btmp ファイル
+やり方はこれ。
+
+# cd /etc/tmpfiles.d
+# cp /usr/lib/tmpfiles.d/var.conf .
+# vi var.conf
+# diff -u /usr/lib/tmpfiles.d/var.conf var.conf
+--- /usr/lib/tmpfiles.d/var.conf        2016-01-24 21:02:26.000000000 +0900
++++ var.conf    2016-04-27 15:31:47.466543000 +0900
+@@ -13,7 +13,9 @@
+
+ d /var/log 0755 - - -
+ f /var/log/wtmp 0664 root utmp -
+-f /var/log/btmp 0600 root utmp -
++#f /var/log/btmp 0600 root utmp -
++f /var/log/lastlog 0664 root utmp -
++d /var/log/fsck 0755 root root
+
+ d /var/cache 0755 - - -
+/usr/lib/tmpfiles.d/var.confを直接変更してもよいのだが、/etc/tmpfiles.d/にコピーすると、こっちを使ってくれるので、そのようにした。
+
+補足：
+上記の仕組みは、systemd-tmpfiles-setup.service により実行される。
+もし、自前でdaemonなどを作成する場合、上記の仕組みを使ってファイル等を自動生成してそれを使おうと思っているならば、実行タイミングに注意されたし。
+
+↑
+/var/mailのオンメモリ化 †
+/etc/fstab へ下記の1行を追加。
+
+# grep /var/mail /etc/fstab
+tmpfs   /var/mail        tmpfs   defaults,size=16m,noatime,mode=2755,gid=mail 0 0
+ディレクトリのパーミッションの先頭を "2" 、gid=mail としているが、これは、元からある /var/mail のパーミッション、グループにならった結果。
+
+↑
+ログローテーション(logrotate) †
+SDカード書き換え対策。
+ログローテションした際のステータスを毎回
+
+/var/lib/logrotate/status
+へ書き出しているので、/var/tmp へ移動する。
+
+# cd /etc/cron.daily
+# cp -p logrotate logrotate.orig
+# chmod ugo-x logrotate.orig
+# vi logrotate
+# diff -u logrotate.orig logrotate
+--- logrotate.orig      2014-01-29 03:02:05.000000000 +0900
++++ logrotate   2016-04-14 11:13:01.092796000 +0900
+@@ -1,4 +1,4 @@
+ #!/bin/sh
+
+ test -x /usr/sbin/logrotate || exit 0
+-/usr/sbin/logrotate /etc/logrotate.conf
++/usr/sbin/logrotate --state /var/tmp/logrotate-state /etc/logrotate.conf
+元のstateファイル(/var/lib/logrotate/state)が不要な方は適宜削除する。
+
+↑
+その他 †
+↑
+bash-completion削除 †
+シェルのコマンドラインの補完がやり過ぎなので、削除。
+
+# apt-get purge bash-completion
+（経過は省略）
+↑
+残事項 †
+localeの設定、インストール(ja_JP.utf8)
+これは最後でよいかと。
+
+raspi-configのExpand Filesystem
+ファイルシステムをSDカードの容量いっぱいまで拡張
+apt-get update

@@ -1,7 +1,7 @@
 ﻿NodeのTCPサーバ・クライアント
 サーバサイドJavaScript Node.js入門
 
-1.TCPサーバの生成から終了までの流れ
+>1.TCPサーバの生成から終了までの流れ
 TCPサーバを生成する
 TCPサーバをリッスンする
 TCPクライアントから接続を受ける
@@ -65,10 +65,9 @@ var foo = require('./ファイル名');
 foo.hoge();  
 
 ----------------------------------------------------------
-NodeJSインストール
-概要
-
-最新バージョンの RASBIAN JESSIE には node v0.10.29 が収容されていますが，現行のものと比べてかなり古いバージョンなのでアンインストールしv5.4.0をインストールします。
+>NodeJSインストール
+最新バージョンの RASBIAN JESSIE には node v0.10.29 が収容されていますが，
+現行のものと比べてかなり古いバージョンなのでアンインストールしv5.4.0をインストールします。
 nvm(node version manager)を使うとnodeのインストールとバージョンコントロールを極めて簡単に行うことができます。
 しかし，nvmの一般的方法でインストールしたnodeは複数ユーザで使う考慮がされてません。
 sudo node としてroot権限でnodeを動かそうとしても node: command not found となります。
@@ -130,13 +129,15 @@ nanoエディタが起動しsudoの動作定義ファイルが開きます。
 Defaults    env_keep += "PATH"
 sudoの動作環境に現在のユーザのコマンド・パスを引き渡す設定です。
 
+------------------------------------------------------------------
 NodeでGPIOを動かす
 
-johnny-five他のパッケージをインストールします
-johnny-fiveパッケージのインストール
+>johnny-fiveパッケージのインストール
 $ npm install johnny-five
-raspi-ioパッケージのインストール
+
+>raspi-ioパッケージのインストール
 $ npm install raspi-io
+
 GPIOの７番ピンに接続したLEDを１秒(1000mS)間隔で点滅させます。
 次のコードを記述したソース・ファイルgpio-led7.jsを作成します。
 
@@ -150,8 +151,7 @@ board.on('ready', function() {
     led.blink(1000);
 });
 
-実行します
-
+>実行します
 $ sudo node gipo-led7.js
 1453297162821 Device(s) RaspberryPi-IO 
 1453297162907 Connected RaspberryPi-IO 
@@ -161,7 +161,9 @@ $ sudo node gipo-led7.js
 $ node gpio-led7.js
 wiringPiSetup: Must be root. (Did you forget sudo?)
 Aborted
+
 GPIOを操作するプログラムは sudo で実行しないと動作しません。
+
 ----------------------------------------------------------------------------------
 Node.jsでshellコマンドを叩く
 
@@ -199,5 +201,6 @@ sar.stdout.on('data', function(data){
 sar.on('exit', function(){
   process.exit(0);
 });
-こんな風にすることで、例えば、ずっと受け続けて、正規表現にマッチするのだけ、とか、特定の文字列が出てきたら、とか、ある値以上だったら、とかの処理を書くことができます。fdを監視しているのと同じノリで監視系とか書くのはnode向いてるかもしれません。
+こんな風にすることで、例えば、ずっと受け続けて、正規表現にマッチするのだけ、とか、特定の文字列が出てきたら、とか、ある値以上だったら、とかの処理を書くことができます。
+fdを監視しているのと同じノリで監視系とか書くのはnode向いてるかもしれません。
 

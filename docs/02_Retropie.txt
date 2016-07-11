@@ -6,3 +6,50 @@ apt-get update
 apt-get upgrade -y
 Expand filesystem
 Overclock
+
+-------------------------------------------------------------
+>PSのゲームディスクからイメージを作成する
+PSのゲームディスク(CD)をそのまま使う方法もある、今回はCDからイメージファイルを作成しRaspberry PI 2のSDカードにコピーして使用する。
+イメージ作成ソフト:CD Manipulatorを使いました。以下のサイトからFinal版が入手可能です。
+
+CD Manipulator跡地	http://www.storeroom.info/cdm/
+
+作成したイメージファイルをRaspberryのSDカードに転送する方法、TeratermのSCP機能で転送しました。
+PSゲームのイメージサイズはどれも数百MBあると思います、現状、16GBのmicroSDカードの空きは十分なので余裕でした。
+
+転送のやり方ですがTeratermからSSHでRaspberryにログイン後、TeratermのファイルメニューからSSH SCPを選択して、指示にしたがってファイルを転送します。
+
+>PCSX Rearmedをインストール
+エミュレーターはPCSX ReARMed。PCSXという有名なエミュレーターをARMに移植したものになります。BIOSファイルがなくても一応動くのでお手軽です。
+PCSX Rearmedにはlibsdl1.2-devが必要なので、まずはこれをインストールします。
+
+sudo apt-get install libsdl1.2-dev
+続いてPCSX Rearmedの最新版(r18)をgitから落として、インストールします。makeにはかなり時間がかかります。
+
+cd $HOME
+git clone https://github.com/notaz/pcsx_rearmed
+cd pcsx_rearmed
+git submodule init && git submodule update
+./configure
+make
+sudo cp pcsx /usr/local/bin/
+
+今回、音声はRaspberry PI 2本体のヘッドフォンジャック使って出力しますので、出力先を指定します。
+amixer cset numid=3 1
+コントローラーはPS3用のDUALSHOCKの手持ちがあったので、こちらをUSBコネクタに接続して使おうと思います。
+sudo apt-get install joystick
+sudo jstest --normal /dev/input/js0
+コントローラーのボタンを押して、画面に反応があればOKです。
+
+PCSX_Rearmedを起動する
+いよいよ、エミュレーターを起動しますが、コンソール上で動かすとハングアップした時などにOSごとフリーズしてしまうことがあるようなので、X Windows上で動かすことにします。
+ということで、まずはX windowsを起動します。
+startx
+
+X Windows上でターミナルを開き、そこで以下のコマンドでエミュレータを起動します。
+pcsx -cdfile rtype.bin
+pcsx_running
+
+ESCキーからメニューに入り、各種設定ができるのできるのですが、DUALSHOCK自体は認識しているようなのですが、左のアナログパッド以外が反応しません。
+残念ですが、コントローラーは諦めることにしました。
+キーボードは反応するので、とりあえず、正常に動作することは確認。また、右上にCPU使用率が小さく出ているのですが、約11%程度ですね。Raspberry PI 2にPSエミュは軽すぎたようです。もっと重いアプリにトライしたくなります

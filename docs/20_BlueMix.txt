@@ -1,9 +1,38 @@
+BlueMix
 
+https://console.ng.bluemix.net/
 
 http://www.ibm.com/developerworks/jp/bluemix/
-ID miyoshi-masato@fujielectric.com
-PASS
+ID	:miyoshi-masato@fujielectric.com
+PASS	:
 
 https://console.ng.bluemix.net/
 https://console.ng.bluemix.net/?direct=classic
 
+--------------------------------------------------------
+例>>BluemixでNodeJSを作成
+
+Deploying your app with the command line interface
+
+Last updated: 24 February 2016
+You can use the command line interface to deploy and modify applications and service instances.
+Before you begin, install the Cloud Foundry and IBM® Bluemix® command line interfaces.
+Download Cloud Foundry command line interface  Download IBM® Bluemix® command line interface
+Restriction: The command line tools are not supported by Cygwin. Use the tools in a command line window other than the Cygwin command line window.
+After the command line interfaces are installed, you can get started:
+Download your starter code.
+Download starter code
+Extract the package to a new directory to set up your development environment.
+Change to your new directory.
+cd your_new_directory
+Make changes to your app code as you see fit. We suggest making sure the app runs locally before you deploy it back to IBM® Bluemix®.
+
+One file you should take note of is the manifest.yml file. When deploying your app back to IBM® Bluemix®, this file is used to determine your application’s URL, memory allocation, number of instances, and other crucial parameters. You can read more about the manifest file in the Cloud Foundry documentation.
+Connect to IBM® Bluemix®.
+bluemix api https://api.ng.bluemix.net
+Log in to Bluemix.
+bluemix login -u miyoshi-masato@fujielectric.com -o miyoshi-masato@fujielectric.com -s miy_IoT
+Deploy your app to Bluemix. For more information about cf push command, see Uploading your application.
+cf push WetherCheack
+Access your app by entering the following URL into your browser:
+wethercheack.mybluemix.net

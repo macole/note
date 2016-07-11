@@ -1,0 +1,35 @@
+1 コピーするSDカード
+2 SDカードのマウント名を確認する
+3 SDカードのコピー
+
+SDカードのマウント名を確認する
+最初にSDカードを差し込み、SDカードのマウント名を確認します。
+SDカードを差し込んだ後に、dfコマンドでマウント名を確認します。
+
+$ df
+Filesystem    512-blocks      Used  Available Capacity  iused     ifree %iused  Mounted on
+/dev/disk0s2   975093952 317863728  656718224    33% 39796964  82089778   33%   /
+devfs                387       387          0   100%      670         0  100%   /dev
+map -hosts             0         0          0   100%        0         0  100%   /net
+map auto_home          0         0          0   100%        0         0  100%   /home
+/dev/disk1s2  3906357344 410160280 3496197064    11% 51270033 437024633   10%   /Volumes/HD-LBU3
+/dev/disk2s1     2916064   2793408     122656    96%        0         0  100%   /Volumes/RECOVERY
+/dev/disk2s5      120958     44885      76073    38%        0         0  100%   /Volumes/BOOT
+
+SDカードのコピー
+コピー元となるdiskにはrを頭につけて、「/dev/rdisk2」とします。
+この時のコピー元、コピー先であるdisk名は間違えないように注意してください。
+システムを破壊する恐れがあります。
+
+以下のコマンドで、アンマウントしてから、disk2からデータを吸い出し、raspbian_20140629.dmgとして保存します。
+
+$diskutil umountDisk /dev/disk2
+$sudo dd if=/dev/rdisk2 of=raspbian_20140629.dmg bs=1m
+その後、コピー元のSDカードを抜き出し、コピー先のSDカードを差し込みます。
+差し込んだSDカードはアンマウントしておきます。
+
+$diskutil umountDisk /dev/disk2
+最後に、コピー先のSDカードへ吸い出したデータraspbian_20140629.dmgを書き込みます。
+これには少し時間がかかります。
+
+$sudo dd  if=raspbian_20140629.dmg of=/dev/rdisk2 bs=1m

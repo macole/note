@@ -1,0 +1,251 @@
+http://netbuffalo.doorblog.jp/archives/4609419.html
+
+
+Outdoor Pi の仕組み
+
+今日ご紹介する Outdoor Pi は 無線 LAN 環境下にある Kindle Paperwhite から Raspberry Pi に SSH 接続して screen セッションを共有、 Kindle E-Ink ディスプレイと物理キーボードを使って屋外で Raspberry Pi を楽しむという実用性は？？？ながらとてもユニークなハックです。
+固定アドレスじゃないと Kindle から SSH 接続する IP アドレスが特定出来ませんからね。
+
+まずは、/etc/network/interfaces をエディタで開き、
+
+pi@raspberrypi ~ $ sudo vi /etc/network/interfaces
+
+
+wlan0 （無線 LAN アダプタ）に固定アドレスを設定します。
+
+allow-hotplug wlan0
+#iface wlan0 inet manual
+#wpa-roam /etc/wpa_supplicant/wpa_supplicant.conf
+
+auto wlan0
+#iface wlan0 inet dhcp
+iface wlan0 inet static
+address 10.0.0.10
+netmask 255.255.255.0
+gateway 10.0.0.1
+wpa-ssid "YOUR SSID"
+wpa-psk "YOUR SSID PASSWORD"
+
+iface default inet dhcp
+
+アドレス（ address, netmask, gateway ）、無線 LAN へのアクセス（ wpa-ssid, wpa-psk ）の設定は利用するネットワーク環境（モバイル・ルーター等の設定を参照）にあわせて変更してくださいね。
+
+※モバイル・ルーターを使う場合、無線 LAN に接続したクライアント端末間での通信も許可しておきましょう。
+
+続いて、次のコマンドで screen をインストール。
+
+pi@raspberrypi ~ $ sudo apt-get install screen
+
+
+screen でセッションを共有するユーザも作りましょう。 ここでは console というユーザを新たに作成しています。
+
+pi@raspberrypi ~ $ sudo useradd -m console
+pi@raspberrypi ~ $ sudo passwd console
+
+
+作成したユーザで管理者コマンド（ sudo ）を実行出来るよう /etc/sudoders を編集して、
+
+pi@raspberrypi ~ $ sudo vi /etc/sudoers
+
+
+pi ユーザと同様、全ての操作を管理者権限で実行出来るようにしておきます。
+
+- - - snip - - -
+#includedir /etc/sudoers.d
+pi ALL=(ALL) NOPASSWD: ALL
+console ALL=(ALL) NOPASSWD: ALL
+
+
+さて、ここからは作成したユーザにスイッチ（ su ）して作業を行います。
+
+pi@raspberrypi ~ $ sudo su - console
+
+
+Kindle からパスワード入力無しでログイン出来るよう SSH 鍵を作成（ passphrase は入力せずエンター・キーを連打）。
+
+console@raspberrypi ~ $ ssh-keygen -t rsa 
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/console/.ssh/id_rsa): Enter passphrase
+(empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/console/.ssh/id_rsa.
+Your public key has been saved in /home/console/.ssh/id_rsa.pub.
+The key fingerprint is:
+7a:45:db:55:57:66:24:2f:d9:da:16:bd:17:58:0d:d9 console@raspberrypi
+The key's randomart image is:
+
+
+作成した公開鍵を authorized_keys に登録しておきます。
+
+console@raspberrypi ~ $ cat ~/.ssh/id_rsa.pub >> ~/.ssh/authorized_keys
+console@raspberrypi ~ $ chmod 600 ~/.ssh/authorized_keys
+
+
+ペアになる秘密鍵は最終的には Kindle へコピーしますが、ひとまず PC に移動してパスワード入力無しでログイン出来ることまで確認しておきましょう。
+
+console@raspberrypi ~ $ ls ~/.ssh/id_rsa
+/home/console/.ssh/id_rsa
+
+
+USB キーボードを使うのであれば必要ありませんが、僕は Bluetooth キーボードを使うので関連するパッケージをインストールして設定。
+
+console@raspberrypi ~ $ sudo apt-get install --no-install-recommends bluetooth
+console@raspberrypi ~ $ sudo apt-get install bluez-utils blueman
+
+
+キーボードの電源をオン、ペアリングの準備が出来たらスキャンして、
+
+console@raspberrypi ~ $ hcitool scan
+Scanning ...
+    00:18:A3:00:D8:0F       TK-FBP013series
+
+
+表示された機器 ID を指定してペアリング。 適当な PIN Code （ここでは 0000 ）を端末とキーボード双方で入力しましょう。
+
+console@raspberrypi ~ $ sudo bluez-simple-agent hci0 00:18:A3:00:D8:0F
+RequestPinCode (/org/bluez/2118/hci0/dev_00_18_A3_00_D8_0F)
+Enter PIN Code: 0000
+Release
+New device (/org/bluez/2118/hci0/dev_00_18_A3_00_D8_0F)
+
+
+最後に信頼する機器として登録、接続します。
+
+console@raspberrypi ~ $ sudo bluez-test-device trusted 00:18:A3:00:D8:0F yes
+console@raspberrypi ~ $ sudo bluez-test-input connect 00:18:A3:00:D8:0F
+
+これで今後キーボード側の電源がオンになれば自動で接続するようになります。
+
+接続は出来たけどキー入力が反映されない、という場合には次のコマンドで一度登録を解除して、もう一度登録してみるのが良いかもしれません。
+（ええ、この時点ではキー入力は確認できませんけどね・・・）
+
+console@raspberrypi ~ $ sudo bluez-simple-agent hci0 00:18:A3:00:D8:0F remove
+
+
+ここまで出来たらホームディレクトリにある .bashrc を開き、
+
+console@raspberrypi ~ $ vi ~/.bashrc
+
+
+ログイン時に screen を起動・セッションの共有を自動で開始出来るようファイルの末尾に次のようなコードを追加しておきます。
+
+if [ -z "$STY" ];  then
+    exec screen -xR
+fi
+
+
+さあ、Raspberry Pi 最後の設定。 exit と入力して一度 pi ユーザに戻り、/etc/inittab （全ての処理の開始となる init プロセスの設定ファイル）をエディタで開きましょう。
+
+pi@raspberrypi ~ $ sudo vi /etc/inittab
+
+
+この中にある tty1 （普段ディスプレイで使われている仮想端末）を追加したユーザ（ここでは console ユーザ）に割り当て、起動時に自動でログインするよう変更しておきます。
+
+# Note that on most Debian systems tty7 is used by the X Window System,
+# so if you want to add more getty's go ahead but skip tty7 if you run X.
+#
+#1:2345:respawn:/sbin/getty --noclear 38400 tty1
+1:2345:respawn:/bin/login -f console tty1 /dev/tty1
+
+
+Kindle Paperwhite のセットアップ - KUAL, Kterm のインストールと設定など
+
+Kindle はディスプレイとして利用しますがこれには脱獄と KUAL と呼ばれるアプリケーション・ランチャーが必要。 詳しい手順はこちらをどうぞ。
+
+Kindle Geek - Kindle Paperwhite で RDP を使ってリモートデスクトップを操作する方法
+
+
+続いて Kterm と呼ばれる Kindle 上で動作する端末（ターミナル）を入手・インストールします。
+
+Kterm – terminal emulator for Kindle Touch and Paperwhite
+
+
+ダウンロードした kterm-xx.zip を解凍、 USB ケーブルで接続した Kindle ドライブの直下に extentions フォルダを作成、この中に kterm フォルダをコピーしましょう。
+
+copy kterm KUAL extention
+
+
+ Kindle を取り外して KUAL ランチャーを開いてみると kterm というメニューが表示されるはずです。
+
+kterm KUAL menu
+
+
+Kterm を選択して起動すればＯＫ。 終了は 2 フィンガー・タップで表示されるメニューから Quit を選択。
+
+kterm menu
+
+
+これで Kterm の準備はおしまい。
+
+
+Kindle Screen - KUAL エクステンションのインストールと設定
+
+さあ、最後に僕が用意した Kindle Screen と呼ぶ KUAL エクステンションを使って Kindle から Raspberry Pi に自動で SSH ログイン、screen セッションを共有してみましょう。
+
+まずは、こちらのリンクから outdoorpi.zip をダウンロード。
+
+OUTDOOR PI - KUAL extention のダウンロード
+ 
+
+この zip ファイルには kscreen というフォルダと kterm ファイルが含まれています。
+
+unzip outdoor pi
+
+
+kterm は開発者の bfabiszewski さんが横画面表示リクエストに応じて用意してくれたバイナリ。 これを USB ケーブルで接続した Kindle ドライブの extentions > kterm > bin フォルダへ上書きコピーしましょう。
+ 
+copy rotation support kterm
+
+
+kscreen はまるごと extentions フォルダへコピーして幾つか設定を行います。
+
+copy kscreen KUAL extention
+
+
+まずは kscreen > key フォルダへ先ほど Raspberry Pi で作成した SSH 秘密鍵をコピー。
+
+ssh secret key
+
+
+次に kscreen > conf ファルダにある screen.conf ファイルをエディタで開き、SSH_HOST （ Raspberry Pi アドレス）, SSH_USER （ SSH ユーザID）, SSH_KEY （コピーした SSH 秘密鍵のファイル名） を設定します。
+
+# SSH config
+SSH_HOST=10.0.0.10
+SSH_USER=console
+SSH_KEY=id_rsa
+
+# KTERM LANDSCAPE. U(UP) or R(ROTATION)
+LANDSCAPE=R
+
+# KTERM COLOR THEME. 0(LIGHT) or 1(DARK)
+COLOR_THEME=0
+
+# KTERM FONT SIZE
+FONT_SIZE=8
+
+
+さあ、 Kindle を取り外して KUAL ランチャーを起動、メニューから Kindle Screen を選択してみて下さい。
+
+kscreen KUAL menu
+
+
+少し時間をおいて・・・ Raspberry Pi に自動接続、Kindle ディスプレイが動き始めたはず（ソフトウェア・キーボードは Kterm メニュー > Toggle Keyboard で消しましょう）。
+
+kindle screen - ssh login
+
+
+キーボードも正しく認識されていれば、そのキー入力が Kindle ディスプレイ上に反映・表示されますよ。
+
+kinlde screen - run raspi-config
+
+
+実際の動画がこちら。
+
+ 
+
+
+E-Ink ディスプレイの反応速度も十分。 これで屋外でも Raspberry Pi を使ったプログラミング、サーバー構築が楽しめますよね？
+
+仕事・壁に行き詰まったら是非どうぞ。
+
+それでは、より楽しい RPi ライフを。

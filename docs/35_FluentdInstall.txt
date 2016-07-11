@@ -1,0 +1,458 @@
+Step 0: Before Installation
+
+Please follow the Preinstallation Guide to configure your OS properly. This will prevent many unnecessary problems.
+
+Step 1 : Install from Apt Repository
+
+For Ubuntu, we currently support “Ubuntu 14.04 LTS / Trusty”, “Ubuntu 12.04 LTS / Precise” and “Ubuntu 10.04 LTS / Lucid”.
+
+For Debian, we currently support Jessie, Wheezy and Squeeze.
+
+A shell script is provided to automate the installation process for each version. The shell script registers a new apt repository at /etc/apt/sources.list.d/treasure-data.list and installs the td-agent deb package.
+
+For Debian Jessie,
+curl -L https://toolbelt.treasuredata.com/sh/install-debian-jessie-td-agent2.sh | sh
+
+
+Step2: Launch Daemon
+
+The /etc/init.d/td-agent script is provided to start, stop, or restart the agent.
+
+$ /etc/init.d/td-agent restart
+$ /etc/init.d/td-agent status
+td-agent (pid  21678) is running...
+The following commands are supported:
+
+$ /etc/init.d/td-agent start
+$ /etc/init.d/td-agent stop
+$ /etc/init.d/td-agent restart
+$ /etc/init.d/td-agent status
+
+Please make sure your configuration file is located at /etc/td-agent/td-agent.conf.
+
+Step3: Post Sample Logs via HTTP
+
+By default, /etc/td-agent/td-agent.conf is configured to take logs from HTTP and route them to stdout (/var/log/td-agent/td-agent.log). You can post sample log records using the curl command.
+
+$ curl -X POST -d 'json={"json":"message"}' http://localhost:8888/debug.test
+Next Steps
+
+You’re now ready to collect your real logs using Fluentd. Please see the following tutorials to learn how to collect your data from various data sources.
+
+Basic Configuration
+Config File
+Application Logs
+Ruby, Java, Python, PHP, Perl, Node.js, Scala
+Examples
+Store Apache Log into Amazon S3
+Store Apache Log into MongoDB
+Data Collection into HDFS
+Please refer to the resources below for further steps.
+
+ChangeLog of td-agent
+Chef Cookbook
+
+今までは同じことをどうやって実現していたの？
+バッチでコピーしたり、似たようなことをやるScribeというツールを使っていた。この方法だと、設定が複雑になりがちだし、バッチだとリアルタイムに処理することができなかった。
+
+fluentdの利点は？
+設定が簡単、かつリアルタイムに処理できること。fluentdを使うとバッチではなくリアルタイムなストリーミング処理ができる。
+
+fluentとfluentdのどっちの読み方が正しいの？
+一応、fluentdが正しいっぽいです。
+
+
+fluentdのインストール方法
+
+簡単なのは、GemやRPMを使ったインストール。yumでのインストールも自分でリポジトリの場所を指定すればできる。どの方法を使っても簡単です。詳しくは公式サイトを見てください。
+fluentd Installation
+http://docs.fluentd.org/articles/install-by-rpm
+
+
+ここではGemを使ったインストール方法のみ書きます。
+
+1
+$ gem install fluentd --no-ri --no-rdoc
+2
+ruby
+
+3
+# カレントディレクトリに設定ファイルを作ります
+4
+$ fluentd --setup ./fluent
+5
+ 
+6
+# fluentdの実行。デーモン起動オプションもあります
+7
+$ fluentd -c ./fluent/fluent.conf -vv &
+
+インストールはたったこれだけです。
+
+
+設定ファイルの簡単な解説
+
+設定ファイルに含まれるのは以下の3要素のみです。それぞれ簡単に解説します。公式解説ページのリンクも貼っておきます。
+fluentd Installation
+
+1
+# sourceディレクティブ。入力方法を決める
+2
+<source>
+3
+  type forward
+4
+</source>
+
+1
+# matchディレクティブ。マッチした入力への処理を決める
+2
+<match index.html>
+3
+  type file
+4
+  path /var/log/fluent/access1
+5
+</match>
+
+1
+# includeディレクティブ。複数のconfファイルをインクルードする時に使う
+2
+# http経由の指定も可能
+3
+include config.d/*.conf
+4
+include http://example.com/fluent.conf
+
+
+sourceディレクティブ
+ログの入力方法を決める。デフォルトで使えるものは、標準入力、ファイル、ポート指定のHTTP通信、等がある。
+
+matchディレクティブ
+ここでマッチしたログに、指定した処理を適用する。デフォルトで使えるものには、標準出力、ファイル、他のfluentサーバーへの転送、これまでに挙げた方法を組み合わせる、等がある。
+
+includeディレクティブ
+複数の設定ファイルを設定することができる。/etc/log/httpd/conf.d/*.confのようなイメージ。
+
+tag(タグ)
+ログを指定するIDのようなものです。matchディレクティブで指定する「debug.test」とかがタグの一例です。詳しくはfluentd公式FAQを読んでみてください。
+
+
+fluentdの起動と停止
+
+Gemでインストールしてバックグラウンドプロセスとして起動した場合は下記のコマンドで起動・停止ができます。
+
+1
+# fluentdの実行。デーモン起動オプションもあります
+2
+$ fluentd -c ./fluent/fluent.conf -vv &
+3
+ 
+4
+# jobsで番号を調べてから
+5
+kill % [job id]
+
+RPMでインストールした場合は、下記のように/etc/init.d/から普通に起動・停止できます。
+
+1
+$ /etc/init.d/td-agent start
+2
+$ /etc/init.d/td-agent stop
+3
+$ /etc/init.d/td-agent restart
+4
+$ /etc/init.d/td-agent status
+
+
+簡単な設定方法
+
+まず最初に注意点。matchディレクティブは最初にマッチしたやつのみ適用されます。ログの出力先が複数ある場合の設定方法はもっと下の方に書いています。
+
+
+標準入力→標準出力
+matchディレクティブでdebug.**を指定しているので、debug.aaaでもひっかかります。
+matchディレクティブで使える正規表現は公式サイトを参照してください。
+fluentd Installation
+1
+# 設定ファイルの中身はこれだけ
+2
+<source>
+3
+  type forward
+4
+</source>
+5
+<match debug.**>
+6
+  type stdout
+7
+</match>
+
+1
+# 設定ファイルを指定して起動
+2
+$ fluentd -c ./fluent/fluent.conf -vv &
+3
+ 
+4
+# 標準出力に結果が表示されます
+5
+$ echo '{"json":"message dayo"}' | fluent-cat debug.test
+
+
+標準入力→ファイル
+1
+<source>
+2
+  type forward
+3
+</source>
+4
+<match apache.access>
+5
+  type file
+6
+  path /var/log/fluent/access
+7
+</match>
+
+1
+# 設定ファイルを指定して起動
+2
+$ fluentd -c ./fluent/fluent.conf -vv &
+3
+ 
+4
+# 指定したファイルに結果が表示されます
+5
+$ echo '{"json":"message dayo"}' | fluent-cat apache.access
+
+
+アクセスログ→ファイル
+01
+<source>
+02
+  type tail
+03
+  format apache
+04
+  path /var/log/httpd-access.log
+05
+  tag apache.access
+06
+</source>
+07
+<match apache.access>
+08
+  type file
+09
+  path /var/log/fluent/access
+10
+</match>
+
+1
+# 設定ファイルを指定して起動
+2
+$ fluentd -c ./fluent/fluent.conf -vv &
+3
+ 
+4
+# アクセスログ経由で、指定したファイルに結果が表示されます
+5
+$ curl http://localhost/index.html -F 'json={"log":"test_dayo"}'
+
+
+特定のポートへのHTTP通信→ファイル
+この場合、8888ポートはfluentdがListenすることになるので、8888は未使用のポートである必要があります。
+1
+# http://localhost:8888/<tag>?json=<json>
+2
+<source>
+3
+  type http
+4
+  port 8888
+5
+</source>
+6
+<match index.html>
+7
+  type file
+8
+  path /var/log/fluent/access
+9
+</match>
+
+1
+# 設定ファイルを指定して起動
+2
+$ fluentd -c ./fluent/fluent.conf -vv &
+3
+ 
+4
+# 指定したファイルに結果が表示されます。この場合はindex.htmlタグにひっかかる
+5
+$ curl http://localhost:8888/index.html -F 'json={"log":"test_dayo"}'
+6
+ 
+7
+# この場合はaaa.index.htmlタグにひっかかる
+8
+$ curl http://localhost:8888/aaa/index.html -F 'json={"log":"test_dayo"}'
+
+
+ちょっと高度な設定方法
+
+
+ログの集約を担当する他のfluentdサーバーへログを転送
+ログを集約する方法については公式サイトにもうちょっと詳しく書いてあります。
+Fluentd High Availability Configuration
+01
+# ログ転送側fluentdの設定ファイル
+02
+<match mytag.**>
+03
+  type forward
+04
+ 
+05
+  # primary host
+06
+  <server>
+07
+    host 192.168.0.1
+08
+    port 24224
+09
+  </server>
+10
+  # use secondary host
+11
+  <server>
+12
+    host 192.168.0.2
+13
+    port 24224
+14
+    standby
+15
+  </server>
+16
+ 
+17
+  # use longer flush_interval to reduce CPU usage.
+18
+  # note that this is a trade-off against latency.
+19
+  flush_interval 60s
+20
+</match>
+
+01
+# ログ受け取り側fluentdの設定ファイル
+02
+# Input
+03
+<source>
+04
+  type forward
+05
+  port 24224
+06
+</source>
+07
+ 
+08
+# Output
+09
+<match mytag.**>
+10
+  ...
+11
+</match>
+
+
+出力先を複数指定
+01
+<match myapp.**>
+02
+  type copy
+03
+ 
+04
+  # 標準出力
+05
+  <store>
+06
+    type stdout
+07
+  </store>
+08
+ 
+09
+  # ファイル
+10
+  <store>
+11
+    type file
+12
+    path /var/log/fluent/myapp
+13
+  </store>
+14
+ 
+15
+  # 他のfluentdサーバーへ転送
+16
+  <store>
+17
+    type forward
+18
+    host 192.168.0.13
+19
+    buffer_type file
+20
+    buffer_path /var/log/fluent/myapp-forward
+21
+    retry_limit 50
+22
+    flush_interval 10s
+23
+  </store>
+24
+</match>
+
+
+その他の出力方法
+1
+# fluentの内部イベントログを出力
+2
+<match fluent.**>
+3
+  type null
+4
+</match>
+
+1
+マッチしなかったログを指定ファイルへ保存。ついでに圧縮
+2
+<match **>
+3
+  type file
+4
+  path /var/log/fluent/else
+5
+  compress gz
+6
+</match>
+
+
+各種プログラミング言語からのログ入力
+
+疲れたのでまた今度。
+
+
+mongoDB、HDFLへの出力
+
+疲れたのでまた今度。

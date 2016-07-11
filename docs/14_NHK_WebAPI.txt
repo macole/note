@@ -1,0 +1,274 @@
+WebAPI
+
+国際宇宙ステーション	http://www.ncsm.city.nagoya.jp/astro/iss_live.html
+気象庁			http://api.aitc.jp/
+名古屋			http://api.aitc.jp/jmardb/reports/0d296be2-cbf3-39b1-bf4d-fcad9f48919b
+
+電力使用状況		http://developer.yahoo.co.jp/webapi/shinsai/setsuden/v1/latestpowerusage.html
+福島第一ライブカメラ	http://www.tepco.co.jp/nu/f1-np/camera/index-j.html
+東京メトロオープンデータ	https://developer.tokyometroapp.jp/info
+NHK番組表		http://api-portal.nhk.or.jp/
+例）				http://api.nhk.or.jp/v2/pg/list/{area}/{service}/{date}.json?key={apikey}
+
+
+リクエストパラメータ
+
+パラメータ	型	説明
+appid
+（必須）	string	アプリケーションID。詳細はアプリケーションIDのヘルプをご覧ください。
+output	enum
+(xml, php, json)
+デフォルト：xml	出力形式を指定します。省略した場合、XML形式となります。
+callback	string
+デフォルト：（なし）	output=jsonを指定した場合、このパラメータを指定するとレスポンスがJSONP形式になります。callback関数名を指定します。
+area	enum
+(tokyo)
+デフォルト：
+tokyo	対象地域です。現在は以下の地域に対応しています。
+
+hokkaido（北海道電力管轄内）
+tohoku（東北電力管轄内）
+tokyo（東京電力管轄内）
+chubu（中部電力管轄内）
+kansai（関西電力管轄内）
+kyushu（九州電力管轄内）
+datetime	YYYYMMDDHH	集計対象となる日時です。省略すると最新のデータを返します。
+latest	integer(0,1）
+デフォルト：0	latest=1を指定した場合、最新の使用電力をより短い更新間隔で取得することができます。
+
+・対応している電力会社
+tohoku（東北電力管轄内）
+tokyo（東京電力管轄内）
+chubu（中部電力管轄内）
+kansai（関西電力管轄内）
+kyushu（九州電力管轄内）
+
+
+サンプルリクエストURL
+
+東京電力管轄内の最新の電力使用状況を取得する場合
+http://setsuden.yahooapis.jp/v1/Setsuden/latestPowerUsage?appid=＜あなたのアプリケーションID＞ &area=tokyo
+東京電力管轄内の2011年6月1日14時台を平均した電力使用状況を取得する場合
+http://setsuden.yahooapis.jp/v1/Setsuden/latestPowerUsage?appid=＜あなたのアプリケーションID＞ &area=tokyo&datetime=2011060114
+東北電力管轄内の5分間隔で更新される最新の電力使用状況を取得する場合
+http://setsuden.yahooapis.jp/v1/Setsuden/latestPowerUsage?appid=＜あなたのアプリケーションID＞ &area=tohoku&latest=1
+
+----------------------------------------------------------
+レスポンスフィールド
+
+フィールド	説明
+ElectricPowerUsage	ルートノードです。以下のノードを含みます。
+フィールド	説明
+Area	地域です。
+Usage	電力使用量です。
+unit：単位。kW（キロワット）で固定となります。
+Capacity	最大供給量です。
+unit：単位。kW（キロワット）で固定となります。
+Date	集計対象日です。
+Hour	集計対象時（24時間表記）です。
+Min	集計対象分です。リクエストパラメータでlatest=1を指定した場合のみ、このフィールドを返します。
+
+
+サンプルレスポンス
+
+XMLのレスポンス例
+<?xml version="1.0" encoding="UTF-8"?>
+<ElectricPowerUsage xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns="urn:yahoo:jp:setsuden:latestPowerUsage" xsi:schemaLocation="yahoo:jp:setsuden:latestPowerUsage http://setsuden.yahooapis.jp/v1/Setsuden/latestPowerUsage.xsd">
+  <Area>tokyo</Area>
+  <Usage unit="kW">34100000</Usage>
+  <Capacity unit="kW">38500000</Capacity>
+  <Date>2011-02-13</Date>
+  <Hour>15</Hour>
+</ElectricPowerUsage>
+
+
+エラー
+
+このAPIは、Yahoo! JAPAN Web APIに共通のエラーメッセージおよびコードを返します。
+
+
+利用制限
+
+このAPIは、24時間中1アプリケーションIDにつき50000件のリクエストが上限となっています。詳しくは「利用制限」をご参照ください。
+
+--------------------------------
+Request URI
+GET http://api.nhk.or.jp/v2/pg/list/230/g1/2016-07-02.json?key=_ENTER_YOUR_KEY_
+
+GET http://api.nhk.or.jp/v2/pg/list/230/g1/2016-07-02.json?key=RhSkmuPJpvQOyISxnmZrRH7snhhHq1gG
+http://api.nhk.or.jp/v2/pg/list/230/g1/2016-07-03.json?key=RhSkmuPJpvQOyISxnmZrRH7snhhHq1gG
+\\
+--------------------------------
+Resource Infomation
+項目	説明
+リクエスト制限	あり
+認証	APIキーによる認証
+HTTP メソッド	GET
+レスポンスフォーマット	json
+レスポンスオブジェクト	List
+API バージョン	v2
+利用回数制限	300回/日
+Request Parameters
+　パラメータ名およびパラメータ値は大文字小文字を区別します。
+パラメータ	必須	説明	値の例
+area	◯	地域ID(3byte)。詳細はこちらをご覧ください。	
+service	◯	サービスID(2byte)。詳細はこちらをご覧ください。	
+date	◯	日付（YYYY-MM-DD形式、当日から１週間先までの日付を指定）	
+apikey	◯	APIキー(32byte)	_ENTER_YOUR_KEY_
+
+
+ リクエストパラメータ
+パラメータ	説明
+service	g1:ＮＨＫ総合１
+g2:ＮＨＫ総合２
+e1:ＮＨＫＥテレ１
+e2:ＮＨＫＥテレ２
+e3:ＮＨＫＥテレ３
+e4:ＮＨＫワンセグ２
+s1:ＮＨＫＢＳ１
+s2:ＮＨＫＢＳ１(１０２ｃｈ)
+s3:ＮＨＫＢＳプレミアム
+s4:ＮＨＫＢＳプレミアム(１０４ｃｈ)
+r1:ＮＨＫラジオ第1
+r2:ＮＨＫラジオ第2
+r3:ＮＨＫＦＭ
+n1:ＮＨＫネットラジオ第1
+n2:ＮＨＫネットラジオ第2
+n3:ＮＨＫネットラジオＦＭ
+tv:テレビ全て
+radio:ラジオ全て
+netradio:ネットラジオ全て
+パラメータ	説明
+area	
+010:札幌, 011:函館, 012:旭川, 013:帯広, 014:釧路, 015:北見, 016:室蘭, 020:青森,
+030:盛岡, 040:仙台, 050:秋田, 060:山形, 070:福島,080:水戸, 090:宇都宮, 100:前橋,
+110:さいたま, 120:千葉, 130:東京, 140:横浜,150:新潟, 160:富山, 170:金沢, 180:福井,
+190:甲府, 200:長野, 210:岐阜, 220:静岡, 230:名古屋, 240:津, 250:大津, 260:京都,
+270:大阪, 280:神戸, 290:奈良, 300:和歌山,310:鳥取, 320:松江, 330:岡山,340:広島,
+350:山口, 360:徳島, 370:高松, 380:松山, 390:高知, 400:福岡, 401:北九州, 410:佐賀,
+420:長崎, 430:熊本, 440:大分, 450:宮崎, 460:鹿児島, 470:沖縄
+
+パラメータ	説明
+genre	
+ARIB STD-B10 デジタル放送に使用する番組配列情報標準規格 5.1版
+第2部番組配列情報における基本情報のデータ構造と定義
+「付録Ｈ:コンテント記述子におけるジャンル指定」で定義される
+ジャンル大分類の値とジャンル中分類の値を
+それぞれ10進数（上位桁を0詰めする）として連結したものとする
+
+XXYY:{ジャンル大分類}{ジャンル中分類}
+（例）0000:定時・総合, 0001:天気, 0100:スポーツニュース, 0101:野球, 0102サッカー
+
+ARIB STD-B10 デジタル放送に使用する番組配列情報標準規格 5.1版
+http://www.arib.or.jp/english/html/overview/doc/2-STD-B10v5_1.pdf
+
+
+■ レスポンスオブジェクト
+
+List
+フィールド	型	詳細	出力
+list	Collection of Program	番組	◯
+DescriptionList
+フィールド	型	詳細	出力
+list	Collection of Description	番組	◯
+NowOnAirList
+フィールド	型	詳細	出力
+nowonair_list	Collection of NowOnAir	現在提供中の番組	◯
+NowOnAir
+フィールド	型	詳細	出力
+previous	Program	前に放送した番組	△
+present	Program	現在放送中の番組	◯
+following	Program	次に放送予定の番組	△
+Program
+フィールド	型	詳細	出力
+id	String	番組ID	◯
+event_id	String	番組イベントID	◯
+start_time	String	放送開始日時（YYYY-MM-DDTHH:mm:ssZ形式）	◯
+end_time	String	放送終了日時（YYYY-MM-DDTHH:mm:ssZ形式）	◯
+area	Area	Areaオブジェクト	◯
+service	Service	Serviceオブジェクト	◯
+title	String	番組名	◯
+subtitle	String	番組内容	◯
+genres	Array of String	番組ジャンル	◯
+Description
+フィールド	型	詳細	出力
+id	String	番組ID	◯
+event_id	String	番組イベントID	◯
+start_time	String	放送開始日時（YYYY-MM-DDTHH:mm:ssZ形式）	◯
+end_time	String	放送終了日時（YYYY-MM-DDTHH:mm:ssZ形式）	◯
+area	Area	Areaオブジェクト	◯
+service	Service	Serviceオブジェクト	◯
+title	String	番組名	◯
+subtitle	String	番組内容	◯
+content	String	番組詳細	◯
+act	String	出演者	◯
+genres	Array of String	番組ジャンル	◯
+program_logo	Logo	番組ロゴ画像（Logoオブジェクト）	◯
+program_url	String	番組サイトURL（番組単位）	△
+episode_url	String	番組サイトURL（放送回単位）	△
+hashtags	Array of String	番組に関連するハッシュタグ	◯
+extras	Extra	拡張情報（Extraオブジェクト）	△
+Aria
+フィールド	型	詳細	出力
+id	String	地域ID	◯
+name	String	地域名	◯
+Service
+フィールド	型	詳細	出力
+id	String	サービスID	◯
+name	String	サービス名	◯
+logo_s	Logo	サービスロゴ画像:小（Logoオブジェクト）	◯
+logo_m	Logo	サービスロゴ画像:中（Logoオブジェクト）	◯
+logo_l	Logo	サービスロゴ画像:大（Logoオブジェクト）	◯
+Logo
+フィールド	型	詳細	出力
+url	String	ロゴ画像のURL	△
+width	String	ロゴ画像の幅	△
+height	String	ロゴ画像の高さ	△
+Extra
+フィールド	型	詳細	出力
+ondemand_program	Link	NHKオンデマンドのコンテンツ(番組単位)	△
+ondemand_episode	Link	NHKオンデマンドのコンテンツ(放送回単位)	△
+Link
+フィールド	型	詳細	出力
+url	String	URL	△
+title	String	タイトル	△
+id	String	ID	△
+※出力…◯:値が空の場合でも出力されるフィールド、△:値が空の場合出力されないフィールド
+
+■ エラーメッセージ
+
+APIのリクエスト時に問題があった場合には、HTTPステータスコードとともにレスポンスを返します。
+
+HTTP Status Codes
+コード	説明	詳細
+200	OK	正常
+304	Not Modified	アクセスされたリソースが更新されていない場合に返されます。
+400	Bad Request	パラメータがAPIで期待されたものと一致しない場合に返されます。
+401	Unauthorized	許可されていないアクセスであった場合に返されます。
+403	Forbidden	リソースへのアクセスを許されていないか、利用制限を超えている場合に適用されます。
+404	Not Found	指定されたリソースが見つからない場合に返されます。
+500	Internal Server Error	内部的な問題によってデータを返すことができない場合に返されます。
+503	Service Unavailable	内部的な問題によってデータを返すことができない場合に返されます。
+Error Messages
+1.{
+
+2.  "error":
+
+3.  {
+
+4.    "code" : 1,
+
+5.    "message" : "Invalid parameters "
+
+6.  }
+
+7.}
+
+Error Codes
+コード	説明
+1	Invalid parameters
+2	Sorry, that page does not exist
+3	Rate limit exceeded
+4	Invalid or expired token
+5	Over capacity
+6	Internal error

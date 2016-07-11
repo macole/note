@@ -1,0 +1,79 @@
+fsck.fatで修復
+
+対処の手順としては
+
+VMwareを立ち上げる
+Micro SDをVMwareに認識させる
+fsck.fatコマンドで修復
+まずWindowsでは修復できないようのなで、Linuxで修復します.おそらくWindowsではデフォルトで見えない領域を修復しないといけないからだと思います.
+
+VMwareを立ち上げます. 自分が使っているLinuxディストリビューションはXubuntu14.04. VAIO Pro 13ではMicro SDをSDカードアダプタに入れて、VAIO Pro 13のSDカードスロットに入れてもVMwareでMicro SDカードを認識することができませんでした. なので、ELECOMのUSBマルチメディアリーダーをVAIO Pro 13のUSBに接続し、メディアリーダーにSDカードを接続することでMicro SDをVMwareに認識させることができました. まず、Micro SDがどのdevに割り当てられているか確認します.
+
+hogehoge@ubuntu:~$ dmesg | tail
+[ 8002.324262] sd 34:0:0:1: Attached scsi generic sg4 type 0
+[ 8002.327772] sd 34:0:0:0: [sdb] Attached SCSI removable disk
+[ 8002.392444] sd 34:0:0:1: [sdc] Attached SCSI removable disk
+[ 8203.563956] sd 34:0:0:1: [sdc] 15759360 512-byte logical blocks: (8.06 GB/7.51 GiB)
+[ 8203.572055] sd 34:0:0:1: [sdc] No Caching mode page found
+[ 8203.572060] sd 34:0:0:1: [sdc] Assuming drive cache: write through
+[ 8203.592378] sd 34:0:0:1: [sdc] No Caching mode page found
+[ 8203.592383] sd 34:0:0:1: [sdc] Assuming drive cache: write through
+[ 8203.595436]  sdc: sdc1 sdc2
+[ 8208.144829] EXT4-fs (sdc2): mounted filesystem with ordered data mode. Opts: (null)
+/dev/sdcに割り当てられていることがわかります. Ubuntu系ではSDカードなどのメディアを認識すると、自動でmountします. これをumountしておきます.
+
+hogehoge@ubuntu:~$ sudo umount /dev/sdc*
+umount: /dev/sdc: not mounted
+そしてfsck.fatで修復.自分の場合は毎回/dev/sdc1が壊れるので、/dev/sdc1を修復します. 場合によっては/dev/sdc2を修復しないといけないこともあるかもしれません.
+
+hogehoge@ubuntu:/media/hogehoge$ sudo fsck.fat -V /dev/sdc1
+fsck.fat 3.0.26 (2014-03-07)
+0x25: Dirty bit is set. Fs was not properly unmounted and some data may be corrupt.
+1) Remove dirty bit
+2) No action
+? 1
+Starting check/repair pass.
+Starting verification pass.
+Perform changes ? (y/n) y
+/dev/sdc1: 54 files, 2428/7161 clusters
+最後にもう一度fsck.fatして、corruptの警告がでなかればOKです.
+
+hogehoge@ubuntu:/media/hogehoge$ sudo fsck.fat -V /dev/sdc1
+fsck.fat 3.0.26 (2014-03-07)
+Starting check/repair pass.
+Starting verification pass.
+/dev/sdc1: 54 files, 2428/7161 clusters
+メモ
+
+ググると、「fsckで修復」というのがすぐに見つかったが、なぜか自分はfsckではダメで、fsck.fatだとうまく修復できた.
+raspberry piを終了するときはsudo shutdown -h nowで終了しているのだが、次回起動でkernel panicになることがある.
+
+
+Raspberry Piで、強制電源OFFによってSDカードのデータが壊れたので復活させる
+概要
+
+　破壊されたRaspberry PiのSDカードデータの復元にトライし、目的ファイル(主にPythonのスクリプト)を復元できた。
+破壊の原因：Raspberry Piでpower off コマンドを使わず直接電源を落としたこと(と思われる)
+復元環境：PC=Idea Pad Yoga 13(Lenovo)、OS=Windows8.1、SDカードスロットにデータ破壊したカードを挿入、ZAR X(後述のファイル復元ソフト)を使用して復元をトライ
+
+
+背景と目的
+
+　最近、Rasberry Piを使っていたところ、ネットワークにつながらずHDMIから映像も出ずシャットダウンコマンドが入力できなくなったため、やむなく電源を落とした。しかし、SDカードのデータが壊れてしまい、起動しなくなってしまった。今までに作ったプログラムのバックアップをしていなかったので、OSはともかくそのファイルだけは復活させたい。そこで、ファイル復活にトライする。
+
+
+詳細
+
+1.状況
+　まず、故障の様子としては、電源を入れると起動画面は出るものの、途中で止まってしまう。OSのデータの大部分は残っているようだが、起動に支障をきたすようなデータ破壊があるようだった。
+
+2.情報収集
+　Webで同様の状況に対する回復例を探したところ、Linux関係のファイル復元に関する情報はたくさんあったが、私自身Linuxの知識が乏しいため、それらの方法を試せそうになかった。なので、1週間ほど悶々とし、あきらめかけていたところこちらのサイトで使用されているZAR Xというファイル復元ソフト(フリー、一部有料)が見つかった。これは、Linuxのext4というファイルシステムも復元の対象となっていて、WindowsPCで動くので、私にも復活の望みをかけ試すことにした。
+
+3.ZAR Xを試す
+　まずはこちらからWindows版をダウンロード、インストール、対象のSDカードをPCに挿し、ZAR Xを起動したところ、図3.1のようにメニューが表示された。
+
+20150913182533
+図3.1　起動したところ
+
+　上から2番目のData Recovery for Windows and Linuxというボタンを押すと、SDカードのスキャンが始まり、1時間近くかかったが、図3.2の復活対象を選択するためのフォルダツリーが表示された。フォルダ名は正しくないが、ファイル自体は無事なようで、目的のファイルがツリーにあることが確認できた。ここでファイルを選択し、Nextボタンを押すと、ファイル出力先フォルダを指定して出力できた！ついに、復活に成功！
